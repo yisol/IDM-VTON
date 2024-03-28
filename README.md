@@ -6,9 +6,9 @@ This is an official implementation of paper 'Improving Diffusion Models for Auth
 ![teaser](assets/teaser.png)&nbsp;
 
 
-# TODO LIST
+## TODO LIST
 
 
-[ ] inference code
-[ ] demo model
-[ ] training code
+- [ ] inference code
+- [ ] demo model
+- [ ] training code
