@@ -4,3 +4,11 @@ This is an official implementation of paper 'Improving Diffusion Models for Auth
 - [project page](https://idm-vton.github.io/) 
 
 ![teaser](assets/teaser.png)&nbsp;
+
+
+# TODO LIST
+
+
+[ ] inference code
+[ ] demo model
+[ ] training code
