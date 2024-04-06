@@ -28,8 +28,8 @@ conda activate idm
 ```
 
 ## Data preparation
-You can download VITON-HD dataset from [VITON-HD](https://github.com/shadow2496/VITON-HD).
-After download VITON-HD dataset, move vitonhd_test_tagged.json into the test folder.
+You can download VITON-HD dataset from [VITON-HD](https://github.com/shadow2496/VITON-HD).  
+After download VITON-HD dataset, move vitonhd_test_tagged.json into the test folder.  
 Structure of the Dataset directory should be as follows.
 
 ```
@@ -52,7 +52,7 @@ test
 
 ## Inference
 
-Inference with python file with argument.
+Inference using python file with arguments.
 
 ```
 accelerate launch inference.py \
@@ -75,5 +75,13 @@ sh inference.sh
 
 ## Acknowledgements
 
-For the demo, GPUs are supported from [zerogpu](https://huggingface.co/zero-gpu-explorers), and auto masking generation codes are based on [OOTDiffusion](https://github.com/levihsu/OOTDiffusion).
+For the demo, GPUs are supported from [zerogpu](https://huggingface.co/zero-gpu-explorers), and auto masking generation codes are based on [OOTDiffusion](https://github.com/levihsu/OOTDiffusion).  
 Parts of the code were based on [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter).
+
+
+
+## License
+The codes and checkpoints in this repository are under the [CC BY-NC-SA 4.0 license](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
+
+
+
