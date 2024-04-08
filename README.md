@@ -76,7 +76,7 @@ sh inference.sh
 ## Acknowledgements
 
 For the demo, GPUs are supported from [zerogpu](https://huggingface.co/zero-gpu-explorers), and auto masking generation codes are based on [OOTDiffusion](https://github.com/levihsu/OOTDiffusion).  
-Parts of the code were based on [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter).
+Parts of the code are based on [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter).
 
 
 

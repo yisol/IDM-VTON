@@ -62,9 +62,7 @@ def parse_args():
     parser.add_argument("--mixed_precision",type=str,default=None,choices=["no", "fp16", "bf16"],)
     parser.add_argument("--enable_xformers_memory_efficient_attention", action="store_true", help="Whether or not to use xformers.")
     args = parser.parse_args()
-    env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
-    if env_local_rank != -1 and env_local_rank != args.local_rank:
-        args.local_rank = env_local_rank
+
 
     return args
 
@@ -120,15 +118,6 @@ class VitonHDTestDataset(data.Dataset):
                             annotation_str += tag["tag_category"]
                             annotation_str += " "
                 self.annotation_pair[elem["file_name"]] = annotation_str
-
-        # ##backup
-        # with open(os.path.join(dataroot_path, "vitonhd.json"), "r") as file2:
-        #     data2 = json.load(file2)
-
-        # for k, v in data2.items():
-        #     keyname = k + "_00.jpg"
-        #     if keyname not in list(self.annotation_pair.keys()):
-        #         self.annotation_pair[keyname] = v[0]
 
         self.order = order
         self.toTensor = transforms.ToTensor()
