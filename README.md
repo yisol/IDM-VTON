@@ -56,7 +56,7 @@ After download DressCode dataset, place image-densepose directories and caption 
 
 ```
 DressCode
-|-- dress
+|-- dresses
     |-- images
     |-- image-densepose
     |-- dc_caption.txt
