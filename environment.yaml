@@ -21,3 +21,4 @@ dependencies:
       - einops==0.7.0
       - bitsandbytes==0.39.0
       - scipy==1.11.1
+      - opencv-python
