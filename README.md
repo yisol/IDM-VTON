@@ -54,6 +54,7 @@ We provide pre-computed densepose images and captions for garments [here](https:
 We used [detectron2](https://github.com/facebookresearch/detectron2) for obtaining densepose images.  
 After download DressCode dataset, place image-densepose directories and caption text files as follows.  
 
+```
 DressCode
 |-- dress
     |-- images
@@ -70,6 +71,7 @@ DressCode
     |-- image-densepose
     |-- dc_caption.txt
     |-- ...
+```
 
 
 ## Inference
