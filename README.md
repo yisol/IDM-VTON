@@ -6,6 +6,7 @@ This is an official implementation of paper 'Improving Diffusion Models for Auth
 🤗 Try our huggingface [Demo](https://huggingface.co/spaces/yisol/IDM-VTON)
 
 ![teaser](assets/teaser.png)&nbsp;
+![teaser2](assets/teaser2.png)&nbsp;
 
 
 ## TODO LIST
