@@ -243,13 +243,13 @@ def main():
         if args.output_dir is not None:
             os.makedirs(args.output_dir, exist_ok=True)
 
-    weight_dtype = torch.float32
-    if accelerator.mixed_precision == "fp16":
-        weight_dtype = torch.float16
-        args.mixed_precision = accelerator.mixed_precision
-    elif accelerator.mixed_precision == "bf16":
-        weight_dtype = torch.bfloat16
-        args.mixed_precision = accelerator.mixed_precision
+    weight_dtype = torch.float16
+    # if accelerator.mixed_precision == "fp16":
+    #     weight_dtype = torch.float16
+    #     args.mixed_precision = accelerator.mixed_precision
+    # elif accelerator.mixed_precision == "bf16":
+    #     weight_dtype = torch.bfloat16
+    #     args.mixed_precision = accelerator.mixed_precision
 
     # Load scheduler, tokenizer and models.
     noise_scheduler = DDPMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
