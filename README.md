@@ -4,7 +4,7 @@
 
 <a href='https://idm-vton.github.io'><img src='https://img.shields.io/badge/Project-Page-green'></a>
 <a href='https://arxiv.org/abs/2403.05139'><img src='https://img.shields.io/badge/Paper-Arxiv-red'></a>
-<a href='https://huggingface.co/spaces/yisol/IDM-VTON'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Demo-blue'></a>
+<a href='https://huggingface.co/spaces/yisol/IDM-VTON'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Demo-yellow'></a>
 <a href='https://huggingface.co/yisol/IDM-VTON'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-blue'></a>
 
 
@@ -136,12 +136,57 @@ or, you can simply run with the script file.
 sh inference.sh
 ```
 
+## Start a local gradio demo <a href='https://github.com/gradio-app/gradio'><img src='https://img.shields.io/github/stars/gradio-app/gradio'></a>
+
+Download checkpoints for human parsing [here](https://huggingface.co/spaces/yisol/IDM-VTON-local/tree/main/ckpt).
+
+Place the checkpoints under the ckpt folder.
+```
+ckpt
+|-- densepose
+    |-- model_final_162be9.pkl
+|-- humanparsing
+    |-- parsing_atr.onnx
+    |-- parsing_lip.onnx
+
+|-- openpose
+    |-- ckpts
+        |-- body_pose_model.pth
+    
+```
+
+
+
+
+Run the following command:
+
+```python
+python gradio_demo/app.py
+```
+
+
+
+
+
 
 ## Acknowledgements
 
-For the [demo](https://huggingface.co/spaces/yisol/IDM-VTON), GPUs are supported from [ZeroGPU](https://huggingface.co/zero-gpu-explorers), and masking generation codes are based on [OOTDiffusion](https://github.com/levihsu/OOTDiffusion) and [DCI-VTON](https://github.com/bcmi/DCI-VTON-Virtual-Try-On).
 
-Parts of our code are based on [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter).
+Thanks [ZeroGPU](https://huggingface.co/zero-gpu-explorers) for providing free GPU.
+
+Thanks [IP-Adapter](https://github.com/tencent-ailab/IP-Adapter) for base codes.
+
+Thanks [OOTDiffusion](https://github.com/levihsu/OOTDiffusion) and [DCI-VTON](https://github.com/bcmi/DCI-VTON-Virtual-Try-On) for masking generation.
+
+Thanks [SCHP](https://github.com/GoGoDuck912/Self-Correction-Human-Parsing) for human segmentation.
+
+Thanks [Densepose](https://github.com/facebookresearch/DensePose) for human densepose.
+
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yisol/IDM-VTON&type=Date)](https://star-history.com/#yisol/IDM-VTON&Date)
 
 
 
@@ -155,8 +200,9 @@ Parts of our code are based on [IP-Adapter](https://github.com/tencent-ailab/IP-
 }
 ```
 
+
+
 ## License
 The codes and checkpoints in this repository are under the [CC BY-NC-SA 4.0 license](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
-
 
 

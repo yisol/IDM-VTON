@@ -213,7 +213,7 @@ class DresscodeTestDataset(data.Dataset):
         result["image"] = image
         result["cloth_pure"] = self.transform(cloth)
         result["cloth"] = self.clip_processor(images=cloth, return_tensors="pt").pixel_values
-        result["inpaint_mask"] =1-mask
+        result["inpaint_mask"] =mask
         result["im_mask"] = im_mask
         result["caption_cloth"] = "a photo of " + cloth_annotation
         result["caption"] = "model is wearing a " + cloth_annotation
