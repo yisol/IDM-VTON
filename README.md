@@ -138,7 +138,7 @@ sh inference.sh
 
 ## Start a local gradio demo <a href='https://github.com/gradio-app/gradio'><img src='https://img.shields.io/github/stars/gradio-app/gradio'></a>
 
-Download checkpoints for human parsing [here](https://huggingface.co/spaces/yisol/IDM-VTON-local/tree/main/ckpt).
+Download checkpoints for human parsing [here](https://huggingface.co/spaces/yisol/IDM-VTON/tree/main/ckpt).
 
 Place the checkpoints under the ckpt folder.
 ```
