@@ -23,7 +23,7 @@ import json
 import accelerate
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw
 import torch.nn.functional as F
 import transformers
 from accelerate import Accelerator
@@ -34,8 +34,9 @@ from torchvision import transforms
 import diffusers
 from diffusers import AutoencoderKL, DDPMScheduler, StableDiffusionPipeline, StableDiffusionXLControlNetInpaintPipeline
 from transformers import AutoTokenizer, PretrainedConfig,CLIPImageProcessor, CLIPVisionModelWithProjection,CLIPTextModelWithProjection, CLIPTextModel, CLIPTokenizer
-
+import cv2
 from diffusers.utils.import_utils import is_xformers_available
+from numpy.linalg import lstsq
 
 from src.unet_hacked_tryon import UNet2DConditionModel
 from src.unet_hacked_garmnet import UNet2DConditionModel as UNet2DConditionModel_ref
@@ -45,33 +46,26 @@ from src.tryon_pipeline import StableDiffusionXLInpaintPipeline as TryonPipeline
 
 logger = get_logger(__name__, log_level="INFO")
 
-
-
-
-def save_image(tensor, name, count):
-        tensor = tensor.squeeze()  # Remove batch dimension if present
-
-        # Check if the tensor has 2 or 3 dimensions
-        if tensor.dim() == 2:
-            # Grayscale image
-            tensor = tensor.unsqueeze(0).repeat(3, 1, 1)  # Convert to 3-channel image by repeating the single channel
-        elif tensor.shape[0] == 1:  # Grayscale image with a single channel
-            tensor = tensor.repeat(3, 1, 1)  # Convert to 3-channel image
-
-        if tensor.dim() != 3 or tensor.shape[0] != 3:
-            raise ValueError("Tensor must have 3 dimensions and 3 channels after processing")
-
-        img = tensor.permute(1, 2, 0).cpu().numpy()  # Convert to HWC format
-        img = (img * 255).astype("uint8")  # Convert to 8-bit image
-        img = Image.fromarray(img)
-
-        # Create the output directory if it doesn't exist
-        output_dir = "./dataset/testing/"
-        os.makedirs(output_dir, exist_ok=True)
-
-        img.save(os.path.join(output_dir, f"{str(count)}_{name}.png"))
-
-
+label_map={
+    "background": 0,
+    "hat": 1,
+    "hair": 2,
+    "sunglasses": 3,
+    "upper_clothes": 4,
+    "skirt": 5,
+    "pants": 6,
+    "dress": 7,
+    "belt": 8,
+    "left_shoe": 9,
+    "right_shoe": 10,
+    "head": 11,
+    "left_leg": 12,
+    "right_leg": 13,
+    "left_arm": 14,
+    "right_arm": 15,
+    "bag": 16,
+    "scarf": 17,
+}
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
@@ -80,6 +74,7 @@ def parse_args():
     parser.add_argument("--height",type=int,default=1024,)
     parser.add_argument("--num_inference_steps",type=int,default=30,)
     parser.add_argument("--output_dir",type=str,default="result",)
+    parser.add_argument("--category",type=str,default="upper_body",choices=["upper_body", "lower_body", "dresses"])
     parser.add_argument("--unpaired",action="store_true",)
     parser.add_argument("--data_dir",type=str,default="/home/omnious/workspace/yisol/Dataset/zalando")
     parser.add_argument("--seed", type=int, default=42,)
@@ -98,21 +93,21 @@ def pil_to_tensor(images):
     return images
 
 
-class VitonHDTestDataset(data.Dataset):
+class DresscodeTestDataset(data.Dataset):
     def __init__(
         self,
         dataroot_path: str,
         phase: Literal["train", "test"],
         order: Literal["paired", "unpaired"] = "paired",
+        category = "upper_body",
         size: Tuple[int, int] = (512, 384),
     ):
-        super(VitonHDTestDataset, self).__init__()
-        self.dataroot = dataroot_path
+        super(DresscodeTestDataset, self).__init__()
+        self.dataroot = os.path.join(dataroot_path,category)
         self.phase = phase
         self.height = size[0]
         self.width = size[1]
         self.size = size
-        self.count = 0
         self.transform = transforms.Compose(
             [
                 transforms.ToTensor(),
@@ -120,139 +115,237 @@ class VitonHDTestDataset(data.Dataset):
             ]
         )
         self.toTensor = transforms.ToTensor()
-
-        with open(
-            os.path.join(dataroot_path, phase, "vitonhd_" + phase + "_tagged.json"), "r"
-        ) as file1:
-            data1 = json.load(file1)
-
-        annotation_list = [
-            "sleeveLength",
-            "neckLine",
-            "item",
-        ]
-
-        self.annotation_pair = {}
-        for k, v in data1.items():
-            for elem in v:
-                annotation_str = ""
-                for template in annotation_list:
-                    for tag in elem["tag_info"]:
-                        if (
-                            tag["tag_name"] == template
-                            and tag["tag_category"] is not None
-                        ):
-                            annotation_str += tag["tag_category"]
-                            annotation_str += " "
-                self.annotation_pair[elem["file_name"]] = annotation_str
-
         self.order = order
-        self.toTensor = transforms.ToTensor()
-
+        self.radius = 5
+        self.category = category
         im_names = []
         c_names = []
-        dataroot_names = []
 
 
         if phase == "train":
-            filename = os.path.join(dataroot_path, f"{phase}_pairs.txt")
+            filename = os.path.join(dataroot_path,category, f"{phase}_pairs.txt")
         else:
-            filename = os.path.join(dataroot_path, f"{phase}_pairs.txt")
+            filename = os.path.join(dataroot_path,category, f"{phase}_pairs_{order}.txt")
 
         with open(filename, "r") as f:
             for line in f.readlines():
-                if phase == "train":
-                    im_name, _ = line.strip().split()
-                    c_name = im_name
-                else:
-                    if order == "paired":
-                        im_name, _ = line.strip().split()
-                        c_name = im_name
-                    else:
-                        im_name, c_name = line.strip().split()
+                im_name, c_name = line.strip().split()
 
                 im_names.append(im_name)
                 c_names.append(c_name)
-                dataroot_names.append(dataroot_path)
+
+
+        file_path = os.path.join(dataroot_path,category,"dc_caption.txt")
+
+        self.annotation_pair = {}
+        with open(file_path, "r") as file:
+            for line in file:
+                parts = line.strip().split(" ")
+                self.annotation_pair[parts[0]] = ' '.join(parts[1:])
+
 
         self.im_names = im_names
         self.c_names = c_names
-        self.dataroot_names = dataroot_names
         self.clip_processor = CLIPImageProcessor()
-
     def __getitem__(self, index):
         c_name = self.c_names[index]
         im_name = self.im_names[index]
         if c_name in self.annotation_pair:
             cloth_annotation = self.annotation_pair[c_name]
         else:
-            cloth_annotation = "shirts"
-        cloth = Image.open(os.path.join(self.dataroot, self.phase, "cloth", c_name))
+            cloth_annotation = self.category
+        cloth = Image.open(os.path.join(self.dataroot, "images", c_name))
 
         im_pil_big = Image.open(
-            os.path.join(self.dataroot, self.phase, "image", im_name)
+            os.path.join(self.dataroot, "images", im_name)
         ).resize((self.width,self.height))
         image = self.transform(im_pil_big)
 
-        mask = Image.open(os.path.join(self.dataroot, self.phase, "agnostic-mask", im_name.replace('.jpg','_mask.png'))).resize((self.width,self.height))
-        mask = self.toTensor(mask)
-        mask = mask[:1]
-        mask = 1-mask
-        im_mask = image * mask
- 
+
+
+
+        skeleton = Image.open(os.path.join(self.dataroot, 'skeletons', im_name.replace("_0", "_5")))
+        skeleton = skeleton.resize((self.width, self.height))
+        skeleton = self.transform(skeleton)
+
+        # Label Map
+        parse_name = im_name.replace('_0.jpg', '_4.png')
+        im_parse = Image.open(os.path.join(self.dataroot, 'label_maps', parse_name))
+        im_parse = im_parse.resize((self.width, self.height), Image.NEAREST)
+        parse_array = np.array(im_parse)
+
+        # Load pose points
+        pose_name = im_name.replace('_0.jpg', '_2.json')
+        with open(os.path.join(self.dataroot, 'keypoints', pose_name), 'r') as f:
+            pose_label = json.load(f)
+            pose_data = pose_label['keypoints']
+            pose_data = np.array(pose_data)
+            pose_data = pose_data.reshape((-1, 4))
+
+        point_num = pose_data.shape[0]
+        pose_map = torch.zeros(point_num, self.height, self.width)
+        r = self.radius * (self.height / 512.0)
+        for i in range(point_num):
+            one_map = Image.new('L', (self.width, self.height))
+            draw = ImageDraw.Draw(one_map)
+            point_x = np.multiply(pose_data[i, 0], self.width / 384.0)
+            point_y = np.multiply(pose_data[i, 1], self.height / 512.0)
+            if point_x > 1 and point_y > 1:
+                draw.rectangle((point_x - r, point_y - r, point_x + r, point_y + r), 'white', 'white')
+            one_map = self.toTensor(one_map)
+            pose_map[i] = one_map[0]
+
+        agnostic_mask = self.get_agnostic(parse_array, pose_data, self.category, (self.width,self.height))
+        # agnostic_mask = transforms.functional.resize(agnostic_mask, (self.height, self.width),
+        #                                              interpolation=transforms.InterpolationMode.NEAREST)
+
+        mask = 1 - agnostic_mask
+        im_mask = image * agnostic_mask 
+        
         pose_img = Image.open(
-            os.path.join(self.dataroot, self.phase, "image-densepose", im_name)
+            os.path.join(self.dataroot, "image-densepose", im_name)
         )
         pose_img = self.transform(pose_img)  # [-1,1]
  
         result = {}
         result["c_name"] = c_name
-        # print("c_name: ", c_name)
-        
         result["im_name"] = im_name
-        # print("im_name: ", im_name)
-        
         result["image"] = image
-        # print("image: ", image.shape)
-        
         result["cloth_pure"] = self.transform(cloth)
-        # print("cloth_pure: ", result["cloth_pure"].shape)
-        
         result["cloth"] = self.clip_processor(images=cloth, return_tensors="pt").pixel_values
-        # print("cloth: ", result["cloth"].shape)
-        
-        result["inpaint_mask"] =1-mask
-        # print("inpaint_mask: ", result["inpaint_mask"].shape)
-        
+        result["inpaint_mask"] =mask
         result["im_mask"] = im_mask
-        # print("im_mask: ", result["im_mask"].shape)
-        
         result["caption_cloth"] = "a photo of " + cloth_annotation
-        # print("caption_cloth: ",result["caption_cloth"])
-        
         result["caption"] = "model is wearing a " + cloth_annotation
-        # print("caption: ",result["caption"])
-        
         result["pose_img"] = pose_img
-        # print("pose_img: ", result["pose_img"].shape)
-        
-        
-        
-        # print("-----------------------------------------------")
-        
-        # save_image(result["cloth"], "cloth", self.count)
-        # save_image(result["inpaint_mask"], "inpaint_mask", self.count)
-        # save_image(result["im_mask"], "im_mask", self.count)
-        # save_image(result["pose_img"], "pose_img", self.count)
-        # save_image(result["image"], "image", self.count)
-        # self.count+=1
-        
-        return result
 
+        return result
 
     def __len__(self):
         # model images + cloth image
         return len(self.im_names)
+
+
+
+
+    def get_agnostic(self,parse_array, pose_data, category, size):
+        parse_shape = (parse_array > 0).astype(np.float32)
+
+        parse_head = (parse_array == 1).astype(np.float32) + \
+                    (parse_array == 2).astype(np.float32) + \
+                    (parse_array == 3).astype(np.float32) + \
+                    (parse_array == 11).astype(np.float32)
+
+        parser_mask_fixed = (parse_array == label_map["hair"]).astype(np.float32) + \
+                            (parse_array == label_map["left_shoe"]).astype(np.float32) + \
+                            (parse_array == label_map["right_shoe"]).astype(np.float32) + \
+                            (parse_array == label_map["hat"]).astype(np.float32) + \
+                            (parse_array == label_map["sunglasses"]).astype(np.float32) + \
+                            (parse_array == label_map["scarf"]).astype(np.float32) + \
+                            (parse_array == label_map["bag"]).astype(np.float32)
+
+        parser_mask_changeable = (parse_array == label_map["background"]).astype(np.float32)
+
+        arms = (parse_array == 14).astype(np.float32) + (parse_array == 15).astype(np.float32)
+
+        if category == 'dresses':
+            label_cat = 7
+            parse_mask = (parse_array == 7).astype(np.float32) + \
+                        (parse_array == 12).astype(np.float32) + \
+                        (parse_array == 13).astype(np.float32)
+            parser_mask_changeable += np.logical_and(parse_array, np.logical_not(parser_mask_fixed))
+
+        elif category == 'upper_body':
+            label_cat = 4
+            parse_mask = (parse_array == 4).astype(np.float32)
+
+            parser_mask_fixed += (parse_array == label_map["skirt"]).astype(np.float32) + \
+                                (parse_array == label_map["pants"]).astype(np.float32)
+
+            parser_mask_changeable += np.logical_and(parse_array, np.logical_not(parser_mask_fixed))
+        elif category == 'lower_body':
+            label_cat = 6
+            parse_mask = (parse_array == 6).astype(np.float32) + \
+                        (parse_array == 12).astype(np.float32) + \
+                        (parse_array == 13).astype(np.float32)
+
+            parser_mask_fixed += (parse_array == label_map["upper_clothes"]).astype(np.float32) + \
+                                (parse_array == 14).astype(np.float32) + \
+                                (parse_array == 15).astype(np.float32)
+            parser_mask_changeable += np.logical_and(parse_array, np.logical_not(parser_mask_fixed))
+
+        parse_head = torch.from_numpy(parse_head)  # [0,1]
+        parse_mask = torch.from_numpy(parse_mask)  # [0,1]
+        parser_mask_fixed = torch.from_numpy(parser_mask_fixed)
+        parser_mask_changeable = torch.from_numpy(parser_mask_changeable)
+
+        # dilation
+        parse_without_cloth = np.logical_and(parse_shape, np.logical_not(parse_mask))
+        parse_mask = parse_mask.cpu().numpy()
+
+        width = size[0]
+        height = size[1]
+
+        im_arms = Image.new('L', (width, height))
+        arms_draw = ImageDraw.Draw(im_arms)
+        if category == 'dresses' or category == 'upper_body':
+            shoulder_right = tuple(np.multiply(pose_data[2, :2], height / 512.0))
+            shoulder_left = tuple(np.multiply(pose_data[5, :2], height / 512.0))
+            elbow_right = tuple(np.multiply(pose_data[3, :2], height / 512.0))
+            elbow_left = tuple(np.multiply(pose_data[6, :2], height / 512.0))
+            wrist_right = tuple(np.multiply(pose_data[4, :2], height / 512.0))
+            wrist_left = tuple(np.multiply(pose_data[7, :2], height / 512.0))
+            if wrist_right[0] <= 1. and wrist_right[1] <= 1.:
+                if elbow_right[0] <= 1. and elbow_right[1] <= 1.:
+                    arms_draw.line([wrist_left, elbow_left, shoulder_left, shoulder_right], 'white', 30, 'curve')
+                else:
+                    arms_draw.line([wrist_left, elbow_left, shoulder_left, shoulder_right, elbow_right], 'white', 30,
+                                'curve')
+            elif wrist_left[0] <= 1. and wrist_left[1] <= 1.:
+                if elbow_left[0] <= 1. and elbow_left[1] <= 1.:
+                    arms_draw.line([shoulder_left, shoulder_right, elbow_right, wrist_right], 'white', 30, 'curve')
+                else:
+                    arms_draw.line([elbow_left, shoulder_left, shoulder_right, elbow_right, wrist_right], 'white', 30,
+                                'curve')
+            else:
+                arms_draw.line([wrist_left, elbow_left, shoulder_left, shoulder_right, elbow_right, wrist_right], 'white',
+                            30, 'curve')
+
+            if height > 512:
+                im_arms = cv2.dilate(np.float32(im_arms), np.ones((10, 10), np.uint16), iterations=5)
+            elif height > 256:
+                im_arms = cv2.dilate(np.float32(im_arms), np.ones((5, 5), np.uint16), iterations=5)
+            hands = np.logical_and(np.logical_not(im_arms), arms)
+            parse_mask += im_arms
+            parser_mask_fixed += hands
+
+        # delete neck
+        parse_head_2 = torch.clone(parse_head)
+        if category == 'dresses' or category == 'upper_body':
+            points = []
+            points.append(np.multiply(pose_data[2, :2], height / 512.0))
+            points.append(np.multiply(pose_data[5, :2], height / 512.0))
+            x_coords, y_coords = zip(*points)
+            A = np.vstack([x_coords, np.ones(len(x_coords))]).T
+            m, c = lstsq(A, y_coords, rcond=None)[0]
+            for i in range(parse_array.shape[1]):
+                y = i * m + c
+                parse_head_2[int(y - 20 * (height / 512.0)):, i] = 0
+
+        parser_mask_fixed = np.logical_or(parser_mask_fixed, np.array(parse_head_2, dtype=np.uint16))
+        parse_mask += np.logical_or(parse_mask, np.logical_and(np.array(parse_head, dtype=np.uint16),
+                                                            np.logical_not(np.array(parse_head_2, dtype=np.uint16))))
+
+        if height > 512:
+            parse_mask = cv2.dilate(parse_mask, np.ones((20, 20), np.uint16), iterations=5)
+        elif height > 256:
+            parse_mask = cv2.dilate(parse_mask, np.ones((10, 10), np.uint16), iterations=5)
+        else:
+            parse_mask = cv2.dilate(parse_mask, np.ones((5, 5), np.uint16), iterations=5)
+        parse_mask = np.logical_and(parser_mask_changeable, np.logical_not(parse_mask))
+        parse_mask_total = np.logical_or(parse_mask, parser_mask_fixed)
+        agnostic_mask = parse_mask_total.unsqueeze(0)
+        return agnostic_mask
 
 
 
@@ -288,7 +381,6 @@ def main():
     #     args.mixed_precision = accelerator.mixed_precision
 
     # Load scheduler, tokenizer and models.
-    print("args.pretrained_model_name_or_path: ", args.pretrained_model_name_or_path)
     noise_scheduler = DDPMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
     vae = AutoencoderKL.from_pretrained(
         args.pretrained_model_name_or_path,
@@ -296,7 +388,7 @@ def main():
         torch_dtype=torch.float16,
     )
     unet = UNet2DConditionModel.from_pretrained(
-        args.pretrained_model_name_or_path,
+        "yisol/IDM-VTON-DC",
         subfolder="unet",
         torch_dtype=torch.float16,
     )
@@ -360,10 +452,11 @@ def main():
         else:
             raise ValueError("xformers is not available. Make sure it is installed correctly")
 
-    test_dataset = VitonHDTestDataset(
+    test_dataset = DresscodeTestDataset(
         dataroot_path=args.data_dir,
-        phase="train",
+        phase="test",
         order="unpaired" if args.unpaired else "paired",
+        category = args.category,
         size=(args.height, args.width),
     )
     test_dataloader = torch.utils.data.DataLoader(
@@ -398,31 +491,7 @@ def main():
         # Extract the images
         with torch.cuda.amp.autocast():
             with torch.no_grad():
-                # count = 0
-                for sample in test_dataloader: 
-#                     print("++++++++++++++++++++++++++++++++")
-#                     print("Keys: ", sample.keys())
-                    
-#                     print("c_name: ", sample['c_name'])
-#                     print("im_name: ", sample['im_name'])
-#                     print("image: ", sample["image"].shape)
-#                     print("cloth_pure: ", sample["cloth_pure"].shape)
-#                     print("cloth: ", sample["cloth"].shape)
-#                     print("inpaint_mask: ", sample["inpaint_mask"].shape)
-#                     print("im_mask: ", sample["caption_cloth"])
-#                     print("caption_cloth: ", sample["caption"])
-#                     print("caption: ", sample["caption"])
-#                     print("pose_img: ", sample["pose_img"].shape)
-                    
-#                     for i in range(args.test_batch_size):
-#                         save_image(sample["image"][i], "image", count)
-#                         save_image(sample["cloth_pure"][i], "cloth_pure", count)
-#                         save_image(sample["cloth"][i], "cloth", count)
-#                         save_image(sample["inpaint_mask"][i], "inpaint_mask", count)
-#                         save_image(sample["pose_img"][i], "pose_img", count)
-#                         count+=1
-#                     print("++++++++++++++++++++++++++++++++")
-                    
+                for sample in test_dataloader:
                     img_emb_list = []
                     for i in range(sample['cloth'].shape[0]):
                         img_emb_list.append(sample['cloth'][i])

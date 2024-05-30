@@ -28,6 +28,8 @@ from src.unet_hacked_tryon import UNet2DConditionModel
 from src.unet_hacked_garmnet import UNet2DConditionModel as UNet2DConditionModel_ref
 from src.tryon_pipeline import StableDiffusionXLInpaintPipeline as TryonPipeline
 
+weight_dtype = torch.float16
+
 logger = get_logger(__name__, log_level="INFO")
 
 def parse_args():
@@ -37,7 +39,7 @@ def parse_args():
     parser.add_argument("--height", type=int, default=1024)
     parser.add_argument("--num_inference_steps", type=int, default=30)
     parser.add_argument("--output_dir", type=str, default="result")
-    parser.add_argument("--data_dir", type=str, default="/home/omnious/workspace/yisol/Dataset/zalando")
+    parser.add_argument("--data_dir", type=str, default="/notebooks/ayna/working_repo/IDM-VTON/dataset")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--batch_size", type=int, default=2)
     parser.add_argument("--num_epochs", type=int, default=10)
@@ -151,8 +153,9 @@ class VitonHDTestDataset(data.Dataset):
     def __len__(self):
         return len(self.im_names)
 
-def train(args, train_dataloader, model, optimizer, accelerator):
-    model.train()
+def train(args, train_dataloader, model, unet, image_encoder, optimizer, accelerator):
+    unet.train()
+    image_encoder.train()
     global_step = 0
 
     for epoch in range(args.num_epochs):
@@ -164,9 +167,9 @@ def train(args, train_dataloader, model, optimizer, accelerator):
                 num_prompts = batch['cloth'].shape[0]
                 negative_prompt = "monochrome, lowres, bad anatomy, worst quality, low quality"
 
-                if not isinstance(prompt, List):
+                if not isinstance(prompt, list):
                     prompt = [prompt] * num_prompts
-                if not isinstance(negative_prompt, List):
+                if not isinstance(negative_prompt, list):
                     negative_prompt = [negative_prompt] * num_prompts
 
                 image_embeds = torch.cat(img_emb_list, dim=0)
@@ -175,7 +178,7 @@ def train(args, train_dataloader, model, optimizer, accelerator):
                     prompt, num_images_per_prompt=1, do_classifier_free_guidance=True, negative_prompt=negative_prompt)
 
                 prompt = batch["caption_cloth"]
-                if not isinstance(prompt, List):
+                if not isinstance(prompt, list):
                     prompt = [prompt] * num_prompts
 
                 prompt_embeds_c = model.encode_prompt(
@@ -190,25 +193,31 @@ def train(args, train_dataloader, model, optimizer, accelerator):
                     num_inference_steps=args.num_inference_steps,
                     generator=generator,
                     strength=1.0,
-                    pose_img=batch['pose_img'],
+                    pose_img=batch['pose_img'].to(accelerator.device, dtype=weight_dtype),  # Ensure pose_img is cast to weight_dtype
                     text_embeds_cloth=prompt_embeds_c,
-                    cloth=batch["cloth_pure"].to(accelerator.device),
-                    mask_image=batch['inpaint_mask'],
-                    image=(batch['image'] + 1.0) / 2.0,
+                    cloth=batch["cloth_pure"].to(accelerator.device, dtype=weight_dtype),  # Ensure cloth is cast to weight_dtype
+                    mask_image=batch['inpaint_mask'].to(accelerator.device, dtype=weight_dtype),  # Ensure inpaint_mask is cast to weight_dtype
+                    image=(batch['image'].to(accelerator.device, dtype=weight_dtype) + 1.0) / 2.0,  # Ensure image is cast to weight_dtype
                     height=args.height,
                     width=args.width,
                     guidance_scale=args.guidance_scale,
-                    ip_adapter_image=image_embeds,
+                    ip_adapter_image=image_embeds.to(accelerator.device, dtype=weight_dtype)  # Ensure ip_adapter_image is cast to weight_dtype
                 )[0]
 
-                loss = F.mse_loss(images, batch['image'])
+                # Ensure model output requires grad
+                images_tensor = torch.stack([transforms.ToTensor()(img).to(accelerator.device) for img in images]).requires_grad_()
+
+                # Ensure batch['image'] is also on the same device
+                batch_image_tensor = batch['image'].to(accelerator.device)
+
+                loss = F.mse_loss(images_tensor, batch_image_tensor)
                 accelerator.backward(loss)
                 optimizer.step()
                 optimizer.zero_grad()
 
                 if global_step % args.save_interval == 0:
                     for i in range(len(images)):
-                        x_sample = pil_to_tensor(images[i])
+                        x_sample = transforms.ToTensor()(images[i])
                         torchvision.utils.save_image(x_sample, os.path.join(args.output_dir, f"step_{global_step}_{batch['im_name'][i]}"))
 
                 global_step += 1
@@ -248,6 +257,10 @@ def main():
     text_encoder_two.requires_grad_(False)
     UNet_Encoder.requires_grad_(False)
 
+    # Allow gradients for the models to be trained
+    unet.requires_grad_(True)
+    image_encoder.requires_grad_(True)
+
     unet.to(accelerator.device, weight_dtype)
     image_encoder.to(accelerator.device, weight_dtype)
 
@@ -271,11 +284,16 @@ def main():
         torch_dtype=weight_dtype,
     ).to(accelerator.device)
 
-    model.unet_encoder = UNet_Encoder
-    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.learning_rate)
+    model.unet_encoder = UNet_Encoder.to('cuda')
+    
+    # Collect parameters from unet and image_encoder
+    params_to_optimize = list(unet.parameters()) + list(image_encoder.parameters())
+    optimizer = torch.optim.Adam(params_to_optimize, lr=args.learning_rate)
+    
     model, optimizer, train_dataloader = accelerator.prepare(model, optimizer, train_dataloader)
 
-    train(args, train_dataloader, model, optimizer, accelerator)
+    train(args, train_dataloader, model, unet, image_encoder, optimizer, accelerator)
 
 if __name__ == "__main__":
     main()
+

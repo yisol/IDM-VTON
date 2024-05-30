@@ -44,8 +44,10 @@ from diffusers.models.embeddings import (
     TimestepEmbedding,
     Timesteps,
 )
+
+
 from diffusers.models.modeling_utils import ModelMixin
-from src.unet_block_hacked_garmnet import (
+from src.unet_block_hacked_tryon import (
     UNetMidBlock2D,
     UNetMidBlock2DCrossAttn,
     UNetMidBlock2DSimpleCrossAttn,
@@ -54,9 +56,131 @@ from src.unet_block_hacked_garmnet import (
 )
 from diffusers.models.resnet import Downsample2D, FirDownsample2D, FirUpsample2D, KDownsample2D, KUpsample2D, ResnetBlock2D, Upsample2D
 from diffusers.models.transformer_2d import Transformer2DModel
+import math
+
+from ip_adapter.ip_adapter import Resampler
 
 
 logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
+
+
+# def FeedForward(dim, mult=4):
+#     inner_dim = int(dim * mult)
+#     return nn.Sequential(
+#         nn.LayerNorm(dim),
+#         nn.Linear(dim, inner_dim, bias=False),
+#         nn.GELU(),
+#         nn.Linear(inner_dim, dim, bias=False),
+#     )
+
+
+
+# def reshape_tensor(x, heads):
+#     bs, length, width = x.shape
+#     # (bs, length, width) --> (bs, length, n_heads, dim_per_head)
+#     x = x.view(bs, length, heads, -1)
+#     # (bs, length, n_heads, dim_per_head) --> (bs, n_heads, length, dim_per_head)
+#     x = x.transpose(1, 2)
+#     # (bs, n_heads, length, dim_per_head) --> (bs*n_heads, length, dim_per_head)
+#     x = x.reshape(bs, heads, length, -1)
+#     return x
+
+
+# class PerceiverAttention(nn.Module):
+#     def __init__(self, *, dim, dim_head=64, heads=8):
+#         super().__init__()
+#         self.scale = dim_head**-0.5
+#         self.dim_head = dim_head
+#         self.heads = heads
+#         inner_dim = dim_head * heads
+
+#         self.norm1 = nn.LayerNorm(dim)
+#         self.norm2 = nn.LayerNorm(dim)
+
+#         self.to_q = nn.Linear(dim, inner_dim, bias=False)
+#         self.to_kv = nn.Linear(dim, inner_dim * 2, bias=False)
+#         self.to_out = nn.Linear(inner_dim, dim, bias=False)
+
+#     def forward(self, x, latents):
+#         """
+#         Args:
+#             x (torch.Tensor): image features
+#                 shape (b, n1, D)
+#             latent (torch.Tensor): latent features
+#                 shape (b, n2, D)
+#         """
+#         x = self.norm1(x)
+#         latents = self.norm2(latents)
+
+#         b, l, _ = latents.shape
+
+#         q = self.to_q(latents)
+#         kv_input = torch.cat((x, latents), dim=-2)
+#         k, v = self.to_kv(kv_input).chunk(2, dim=-1)
+
+#         q = reshape_tensor(q, self.heads)
+#         k = reshape_tensor(k, self.heads)
+#         v = reshape_tensor(v, self.heads)
+
+#         # attention
+#         scale = 1 / math.sqrt(math.sqrt(self.dim_head))
+#         weight = (q * scale) @ (k * scale).transpose(-2, -1)  # More stable with f16 than dividing afterwards
+#         weight = torch.softmax(weight.float(), dim=-1).type(weight.dtype)
+#         out = weight @ v
+
+#         out = out.permute(0, 2, 1, 3).reshape(b, l, -1)
+
+#         return self.to_out(out)
+
+
+# class Resampler(nn.Module):
+#     def __init__(
+#         self,
+#         dim=1024,
+#         depth=8,
+#         dim_head=64,
+#         heads=16,
+#         num_queries=8,
+#         embedding_dim=768,
+#         output_dim=1024,
+#         ff_mult=4,
+#         max_seq_len: int = 257,  # CLIP tokens + CLS token
+#         apply_pos_emb: bool = False,
+#         num_latents_mean_pooled: int = 0,  # number of latents derived from mean pooled representation of the sequence
+#     ):
+#         super().__init__()
+
+#         self.latents = nn.Parameter(torch.randn(1, num_queries, dim) / dim**0.5)
+
+#         self.proj_in = nn.Linear(embedding_dim, dim)
+
+#         self.proj_out = nn.Linear(dim, output_dim)
+#         self.norm_out = nn.LayerNorm(output_dim)
+
+#         self.layers = nn.ModuleList([])
+#         for _ in range(depth):
+#             self.layers.append(
+#                 nn.ModuleList(
+#                     [
+#                         PerceiverAttention(dim=dim, dim_head=dim_head, heads=heads),
+#                         FeedForward(dim=dim, mult=ff_mult),
+#                     ]
+#                 )
+#             )
+
+#     def forward(self, x):
+
+#         latents = self.latents.repeat(x.size(0), 1, 1)
+
+#         x = self.proj_in(x)
+
+
+#         for attn, ff in self.layers:
+#             latents = attn(x, latents) + latents
+#             latents = ff(latents) + latents
+
+#         latents = self.proj_out(latents)
+#         return self.norm_out(latents)
 
 
 def zero_module(module):
@@ -319,8 +443,6 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             post_act_fn=timestep_post_act,
             cond_proj_dim=time_cond_proj_dim,
         )
-        
-        
 
         if encoder_hid_dim_type is None and encoder_hid_dim is not None:
             encoder_hid_dim_type = "text_proj"
@@ -349,6 +471,20 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                 image_embed_dim=encoder_hid_dim,
                 cross_attention_dim=cross_attention_dim,
             )
+        elif encoder_hid_dim_type == "ip_image_proj":
+            # Kandinsky 2.2
+            self.encoder_hid_proj = Resampler(
+                dim=1280,
+                depth=4,
+                dim_head=64,
+                heads=20,
+                num_queries=16,
+                embedding_dim=encoder_hid_dim,
+                output_dim=self.config.cross_attention_dim,
+                ff_mult=4,
+            )
+                                    
+            
         elif encoder_hid_dim_type is not None:
             raise ValueError(
                 f"encoder_hid_dim_type: {encoder_hid_dim_type} must be None, 'text_proj' or 'text_image_proj'."
@@ -603,75 +739,6 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
 
 
 
-        # encode_output_chs = [
-        #     # 320,
-        #     # 320,
-        #     # 320,
-        #     1280, 
-        #     1280, 
-        #     1280, 
-        #     1280,
-        #     640,
-        #     640
-        # ]
-
-        # encode_output_chs2 = [
-        #     # 320,
-        #     # 320,
-        #     # 320,
-        #     1280, 
-        #     1280,
-        #     640, 
-        #     640, 
-        #     640,
-        #     320
-        # ]
-
-        # encode_num_head_chs3 = [
-        #     # 5,
-        #     # 5,
-        #     # 10,
-        #     20,
-        #     20, 
-        #     20,
-        #     10,
-        #     10, 
-        #     10 
-        # ]
-
-
-        # encode_num_layers_chs4 = [
-        #     # 1,
-        #     # 1,
-        #     # 2,
-        #     10,
-        #     10, 
-        #     10,
-        #     2,
-        #     2, 
-        #     2 
-        # ]
-
-
-        # self.warp_blks = nn.ModuleList([])
-        # self.warp_zeros = nn.ModuleList([])
-
-        # for in_ch, cont_ch,num_head,num_layers in zip(encode_output_chs, encode_output_chs2,encode_num_head_chs3,encode_num_layers_chs4):
-        #     # dim_head = in_ch // self.num_heads
-        #     # dim_head = dim_head // dim_head_denorm
-
-        #     self.warp_blks.append(Transformer2DModel(
-        #     num_attention_heads=num_head,
-        #     attention_head_dim=64,
-        #     in_channels=in_ch,
-        #     num_layers = num_layers,
-        #     cross_attention_dim = cont_ch,
-        #     ))
-            
-        #     self.warp_zeros.append(zero_module(nn.Conv2d(in_ch, in_ch, 1, padding=0)))
-
-
-
         # out
         if norm_num_groups is not None:
             self.conv_norm_out = nn.GroupNorm(
@@ -702,6 +769,26 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             )
 
 
+
+        from ip_adapter.attention_processor import IPAttnProcessor2_0 as IPAttnProcessor, AttnProcessor2_0 as AttnProcessor
+
+        attn_procs = {}
+        for name in self.attn_processors.keys():
+            cross_attention_dim = None if name.endswith("attn1.processor") else self.config.cross_attention_dim
+            if name.startswith("mid_block"):
+                hidden_size = self.config.block_out_channels[-1]
+            elif name.startswith("up_blocks"):
+                block_id = int(name[len("up_blocks.")])
+                hidden_size = list(reversed(self.config.block_out_channels))[block_id]
+            elif name.startswith("down_blocks"):
+                block_id = int(name[len("down_blocks.")])
+                hidden_size = self.config.block_out_channels[block_id]
+            if cross_attention_dim is None:
+                attn_procs[name] = AttnProcessor()
+            else:
+                layer_name = name.split(".processor")[0]
+                attn_procs[name] = IPAttnProcessor(hidden_size=hidden_size, cross_attention_dim=cross_attention_dim, num_tokens=16)
+        self.set_attn_processor(attn_procs)
 
 
     @property
@@ -931,6 +1018,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
         down_intrablock_additional_residuals: Optional[Tuple[torch.Tensor]] = None,
         encoder_attention_mask: Optional[torch.Tensor] = None,
         return_dict: bool = True,
+        garment_features: Optional[Tuple[torch.Tensor]] = None,
     ) -> Union[UNet2DConditionOutput, Tuple]:
         r"""
         The [`UNet2DConditionModel`] forward method.
@@ -1001,7 +1089,6 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                 # Forward upsample size to force interpolation output size.
                 forward_upsample_size = True
                 break
-
         # ensure attention_mask is a bias, and give it a singleton query_tokens dimension
         # expects mask of shape:
         #   [batch, key_tokens]
@@ -1049,10 +1136,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
         # `Timesteps` does not contain any weights and will always return f32 tensors
         # but time_embedding might actually be running in fp16. so we need to cast here.
         # there might be better ways to encapsulate this.
-        t_emb = t_emb.to("cuda", dtype=torch.float16)
-                
-        if timestep_cond is not None and timestep_cond.device != t_emb.device:
-            timestep_cond = timestep_cond.to(t_emb.device)
+        t_emb = t_emb.to(dtype=sample.dtype)
 
         emb = self.time_embedding(t_emb, timestep_cond)
         aug_emb = None
@@ -1153,18 +1237,21 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                     f"{self.__class__} has the config param `encoder_hid_dim_type` set to 'ip_image_proj' which requires the keyword argument `image_embeds` to be passed in  `added_conditions`"
                 )
             image_embeds = added_cond_kwargs.get("image_embeds")
-            image_embeds = self.encoder_hid_proj(image_embeds).to(encoder_hidden_states.dtype)
+            # print(image_embeds.shape)
+            # image_embeds = self.encoder_hid_proj(image_embeds).to(encoder_hidden_states.dtype)
             encoder_hidden_states = torch.cat([encoder_hidden_states, image_embeds], dim=1)
 
         # 2. pre-process
         sample = self.conv_in(sample)
-        garment_features=[]
 
         # 2.5 GLIGEN position net
         if cross_attention_kwargs is not None and cross_attention_kwargs.get("gligen", None) is not None:
             cross_attention_kwargs = cross_attention_kwargs.copy()
             gligen_args = cross_attention_kwargs.pop("gligen")
             cross_attention_kwargs["gligen"] = {"objs": self.position_net(**gligen_args)}
+
+
+        curr_garment_feat_idx = 0
 
 
         # 3. down
@@ -1199,23 +1286,24 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                 if is_adapter and len(down_intrablock_additional_residuals) > 0:
                     additional_residuals["additional_residuals"] = down_intrablock_additional_residuals.pop(0)
 
-                sample, res_samples,out_garment_feat = downsample_block(
+                sample, res_samples,curr_garment_feat_idx = downsample_block(
                     hidden_states=sample,
                     temb=emb,
                     encoder_hidden_states=encoder_hidden_states,
                     attention_mask=attention_mask,
                     cross_attention_kwargs=cross_attention_kwargs,
                     encoder_attention_mask=encoder_attention_mask,
+                    garment_features=garment_features,
+                    curr_garment_feat_idx=curr_garment_feat_idx,
                     **additional_residuals,
                 )
-                garment_features += out_garment_feat
             else:
                 sample, res_samples = downsample_block(hidden_states=sample, temb=emb, scale=lora_scale)
                 if is_adapter and len(down_intrablock_additional_residuals) > 0:
                     sample += down_intrablock_additional_residuals.pop(0)
 
             down_block_res_samples += res_samples
-        
+
 
         if is_controlnet:
             new_down_block_res_samples = ()
@@ -1231,16 +1319,16 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
         # 4. mid
         if self.mid_block is not None:
             if hasattr(self.mid_block, "has_cross_attention") and self.mid_block.has_cross_attention:
-                sample,out_garment_feat = self.mid_block(
+                sample ,curr_garment_feat_idx= self.mid_block(
                     sample,
                     emb,
                     encoder_hidden_states=encoder_hidden_states,
                     attention_mask=attention_mask,
                     cross_attention_kwargs=cross_attention_kwargs,
                     encoder_attention_mask=encoder_attention_mask,
+                    garment_features=garment_features,
+                    curr_garment_feat_idx=curr_garment_feat_idx,
                 )
-                garment_features += out_garment_feat
-
             else:
                 sample = self.mid_block(sample, emb)
 
@@ -1270,7 +1358,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                 upsample_size = down_block_res_samples[-1].shape[2:]
 
             if hasattr(upsample_block, "has_cross_attention") and upsample_block.has_cross_attention:
-                sample,out_garment_feat = upsample_block(
+                sample ,curr_garment_feat_idx= upsample_block(
                     hidden_states=sample,
                     temb=emb,
                     res_hidden_states_tuple=res_samples,
@@ -1279,11 +1367,29 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                     upsample_size=upsample_size,
                     attention_mask=attention_mask,
                     encoder_attention_mask=encoder_attention_mask,
+                    garment_features=garment_features,
+                    curr_garment_feat_idx=curr_garment_feat_idx,
                 )
-                garment_features += out_garment_feat
 
+            else:
+                sample = upsample_block(
+                    hidden_states=sample,
+                    temb=emb,
+                    res_hidden_states_tuple=res_samples,
+                    upsample_size=upsample_size,
+                    scale=lora_scale,
+                )
+        # 6. post-process
+        if self.conv_norm_out:
+            sample = self.conv_norm_out(sample)
+            sample = self.conv_act(sample)
+        sample = self.conv_out(sample)
+
+        if USE_PEFT_BACKEND:
+            # remove `lora_scale` from each PEFT layer
+            unscale_lora_layers(self, lora_scale)
 
         if not return_dict:
-            return (sample,),garment_features
+            return (sample,)
 
-        return UNet2DConditionOutput(sample=sample),garment_features
+        return UNet2DConditionOutput(sample=sample)
