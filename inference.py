@@ -47,6 +47,32 @@ logger = get_logger(__name__, log_level="INFO")
 
 
 
+
+def save_image(tensor, name, count):
+        tensor = tensor.squeeze()  # Remove batch dimension if present
+
+        # Check if the tensor has 2 or 3 dimensions
+        if tensor.dim() == 2:
+            # Grayscale image
+            tensor = tensor.unsqueeze(0).repeat(3, 1, 1)  # Convert to 3-channel image by repeating the single channel
+        elif tensor.shape[0] == 1:  # Grayscale image with a single channel
+            tensor = tensor.repeat(3, 1, 1)  # Convert to 3-channel image
+
+        if tensor.dim() != 3 or tensor.shape[0] != 3:
+            raise ValueError("Tensor must have 3 dimensions and 3 channels after processing")
+
+        img = tensor.permute(1, 2, 0).cpu().numpy()  # Convert to HWC format
+        img = (img * 255).astype("uint8")  # Convert to 8-bit image
+        img = Image.fromarray(img)
+
+        # Create the output directory if it doesn't exist
+        output_dir = "./dataset/testing/"
+        os.makedirs(output_dir, exist_ok=True)
+
+        img.save(os.path.join(output_dir, f"{str(count)}_{name}.png"))
+
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
     parser.add_argument("--pretrained_model_name_or_path",type=str,default= "yisol/IDM-VTON",required=False,)
@@ -86,6 +112,7 @@ class VitonHDTestDataset(data.Dataset):
         self.height = size[0]
         self.width = size[1]
         self.size = size
+        self.count = 0
         self.transform = transforms.Compose(
             [
                 transforms.ToTensor(),
@@ -152,6 +179,7 @@ class VitonHDTestDataset(data.Dataset):
         self.c_names = c_names
         self.dataroot_names = dataroot_names
         self.clip_processor = CLIPImageProcessor()
+
     def __getitem__(self, index):
         c_name = self.c_names[index]
         im_name = self.im_names[index]
@@ -179,17 +207,48 @@ class VitonHDTestDataset(data.Dataset):
  
         result = {}
         result["c_name"] = c_name
+        # print("c_name: ", c_name)
+        
         result["im_name"] = im_name
+        # print("im_name: ", im_name)
+        
         result["image"] = image
+        # print("image: ", image.shape)
+        
         result["cloth_pure"] = self.transform(cloth)
+        # print("cloth_pure: ", result["cloth_pure"].shape)
+        
         result["cloth"] = self.clip_processor(images=cloth, return_tensors="pt").pixel_values
+        # print("cloth: ", result["cloth"].shape)
+        
         result["inpaint_mask"] =1-mask
+        # print("inpaint_mask: ", result["inpaint_mask"].shape)
+        
         result["im_mask"] = im_mask
+        # print("im_mask: ", result["im_mask"].shape)
+        
         result["caption_cloth"] = "a photo of " + cloth_annotation
+        # print("caption_cloth: ",result["caption_cloth"])
+        
         result["caption"] = "model is wearing a " + cloth_annotation
+        # print("caption: ",result["caption"])
+        
         result["pose_img"] = pose_img
-
+        # print("pose_img: ", result["pose_img"].shape)
+        
+        
+        
+        # print("-----------------------------------------------")
+        
+        # save_image(result["cloth"], "cloth", self.count)
+        # save_image(result["inpaint_mask"], "inpaint_mask", self.count)
+        # save_image(result["im_mask"], "im_mask", self.count)
+        # save_image(result["pose_img"], "pose_img", self.count)
+        # save_image(result["image"], "image", self.count)
+        # self.count+=1
+        
         return result
+
 
     def __len__(self):
         # model images + cloth image
@@ -302,7 +361,7 @@ def main():
 
     test_dataset = VitonHDTestDataset(
         dataroot_path=args.data_dir,
-        phase="test",
+        phase="train",
         order="unpaired" if args.unpaired else "paired",
         size=(args.height, args.width),
     )
@@ -338,7 +397,31 @@ def main():
         # Extract the images
         with torch.cuda.amp.autocast():
             with torch.no_grad():
-                for sample in test_dataloader:
+                # count = 0
+                for sample in test_dataloader: 
+#                     print("++++++++++++++++++++++++++++++++")
+#                     print("Keys: ", sample.keys())
+                    
+#                     print("c_name: ", sample['c_name'])
+#                     print("im_name: ", sample['im_name'])
+#                     print("image: ", sample["image"].shape)
+#                     print("cloth_pure: ", sample["cloth_pure"].shape)
+#                     print("cloth: ", sample["cloth"].shape)
+#                     print("inpaint_mask: ", sample["inpaint_mask"].shape)
+#                     print("im_mask: ", sample["caption_cloth"])
+#                     print("caption_cloth: ", sample["caption"])
+#                     print("caption: ", sample["caption"])
+#                     print("pose_img: ", sample["pose_img"].shape)
+                    
+#                     for i in range(args.test_batch_size):
+#                         save_image(sample["image"][i], "image", count)
+#                         save_image(sample["cloth_pure"][i], "cloth_pure", count)
+#                         save_image(sample["cloth"][i], "cloth", count)
+#                         save_image(sample["inpaint_mask"][i], "inpaint_mask", count)
+#                         save_image(sample["pose_img"][i], "pose_img", count)
+#                         count+=1
+#                     print("++++++++++++++++++++++++++++++++")
+                    
                     img_emb_list = []
                     for i in range(sample['cloth'].shape[0]):
                         img_emb_list.append(sample['cloth'][i])
