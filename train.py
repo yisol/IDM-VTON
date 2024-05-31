@@ -27,28 +27,34 @@ from diffusers.utils.import_utils import is_xformers_available
 from src.unet_hacked_tryon import UNet2DConditionModel
 from src.unet_hacked_garmnet import UNet2DConditionModel as UNet2DConditionModel_ref
 from src.tryon_pipeline import StableDiffusionXLInpaintPipeline as TryonPipeline
+import wandb
+wandb.login(key='6b9529ffc8d1630ecad71718647e2e14c98bf360')
 
 weight_dtype = torch.float16
 
 logger = get_logger(__name__, log_level="INFO")
 
+wandb.init(project="Ayna")
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Training script for IDM-VTON.")
     parser.add_argument("--pretrained_model_name_or_path", type=str, default="yisol/IDM-VTON", required=False)
-    parser.add_argument("--width", type=int, default=768)
-    parser.add_argument("--height", type=int, default=1024)
+    parser.add_argument("--width", type=int, default=384)
+    parser.add_argument("--height", type=int, default=512)
     parser.add_argument("--num_inference_steps", type=int, default=30)
     parser.add_argument("--output_dir", type=str, default="result")
     parser.add_argument("--data_dir", type=str, default="/notebooks/ayna/working_repo/IDM-VTON/dataset")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--batch_size", type=int, default=2)
-    parser.add_argument("--num_epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--num_epochs", type=int, default=100)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
-    parser.add_argument("--save_interval", type=int, default=100)
+    parser.add_argument("--save_interval", type=int, default=50)
     parser.add_argument("--guidance_scale", type=float, default=2.0)
     parser.add_argument("--mixed_precision", type=str, default=None, choices=["no", "fp16", "bf16"])
     parser.add_argument("--enable_xformers_memory_efficient_attention", action="store_true", help="Whether or not to use xformers.")
     args = parser.parse_args()
+    wandb.config.update(args)
     return args
 
 def pil_to_tensor(images):
@@ -209,18 +215,48 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
 
                 # Ensure batch['image'] is also on the same device
                 batch_image_tensor = batch['image'].to(accelerator.device)
+                
+                # print("image tensor shape: ", images_tensor.shape)
+                # print("batch tensor shape: ", batch_image_tensor.shape)
+                
+                # Convert tensors to PIL images and save them as .jpg files
+                # to_pil = transforms.ToPILImage()
+
+                # def save_images(tensor, prefix):
+                #     tensor = tensor.detach().cpu() 
+                #     for i in range(tensor.size(0)):
+                #         img = to_pil(tensor[i])
+                #         img.save(f"{prefix}_image_{i}.jpg")
+
+                # Save images from images_tensor
+                # save_images(images_tensor, "output_images_tensor")
+                # save_images(batch_image_tensor, "output_batch_image_tensor")
 
                 loss = F.mse_loss(images_tensor, batch_image_tensor)
                 accelerator.backward(loss)
                 optimizer.step()
                 optimizer.zero_grad()
+                
+                if global_step % 10 == 0:
+                    wandb.log({"Step": global_step, "Loss": loss.item()})
 
                 if global_step % args.save_interval == 0:
+                    print("Global_step: ", global_step)
                     for i in range(len(images)):
                         x_sample = transforms.ToTensor()(images[i])
                         torchvision.utils.save_image(x_sample, os.path.join(args.output_dir, f"step_{global_step}_{batch['im_name'][i]}"))
+                        print("Images generated!")
 
                 global_step += 1
+
+                
+def initialize_weights(model):
+    for name, param in model.named_parameters():
+        if 'weight' in name:
+            torch.nn.init.normal_(param, mean=0.0, std=0.02)
+        elif 'bias' in name:
+            torch.nn.init.constant_(param, 0)
+
 
 def main():
     args = parse_args()
@@ -259,10 +295,13 @@ def main():
 
     # Allow gradients for the models to be trained
     unet.requires_grad_(True)
-    image_encoder.requires_grad_(True)
+    image_encoder.requires_grad_(False)
+    
+    initialize_weights(unet)
+    # initialize_weights(image_encoder)
 
     unet.to(accelerator.device, weight_dtype)
-    image_encoder.to(accelerator.device, weight_dtype)
+    # image_encoder.to(accelerator.device, weight_dtype)
 
     if args.enable_xformers_memory_efficient_attention and is_xformers_available():
         unet.enable_xformers_memory_efficient_attention()
@@ -287,7 +326,7 @@ def main():
     model.unet_encoder = UNet_Encoder.to('cuda')
     
     # Collect parameters from unet and image_encoder
-    params_to_optimize = list(unet.parameters()) + list(image_encoder.parameters())
+    params_to_optimize = unet.parameters()
     optimizer = torch.optim.Adam(params_to_optimize, lr=args.learning_rate)
     
     model, optimizer, train_dataloader = accelerator.prepare(model, optimizer, train_dataloader)
@@ -296,4 +335,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 38, in <module>
+    wandb.config.update(args)
+NameError: name 'args' is not defined

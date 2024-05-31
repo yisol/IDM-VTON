@@ -1,0 +1,286 @@
+2024-05-31 06:59:26,670 INFO    StreamThr :966 [internal.py:wandb_internal():85] W&B internal server running at pid: 966, started at: 2024-05-31 06:59:26.669844
+2024-05-31 06:59:26,672 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status
+2024-05-31 06:59:26,673 INFO    WriterThread:966 [datastore.py:open_for_write():87] open: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/run-8fbulplh.wandb
+2024-05-31 06:59:26,675 DEBUG   SenderThread:966 [sender.py:send():378] send: header
+2024-05-31 06:59:26,675 DEBUG   SenderThread:966 [sender.py:send():378] send: run
+2024-05-31 06:59:26,810 INFO    SenderThread:966 [dir_watcher.py:__init__():211] watching files in: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files
+2024-05-31 06:59:26,810 INFO    SenderThread:966 [sender.py:_start_run_threads():1123] run started: 8fbulplh with start time 1717138766.670218
+2024-05-31 06:59:26,815 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: check_version
+2024-05-31 06:59:26,815 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: check_version
+2024-05-31 06:59:26,885 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: run_start
+2024-05-31 06:59:26,892 DEBUG   HandlerThread:966 [system_info.py:__init__():26] System info init
+2024-05-31 06:59:26,892 DEBUG   HandlerThread:966 [system_info.py:__init__():41] System info init done
+2024-05-31 06:59:26,892 INFO    HandlerThread:966 [system_monitor.py:start():194] Starting system monitor
+2024-05-31 06:59:26,893 INFO    SystemMonitor:966 [system_monitor.py:_start():158] Starting system asset monitoring threads
+2024-05-31 06:59:26,893 INFO    HandlerThread:966 [system_monitor.py:probe():214] Collecting system info
+2024-05-31 06:59:26,893 INFO    SystemMonitor:966 [interfaces.py:start():188] Started cpu monitoring
+2024-05-31 06:59:26,894 INFO    SystemMonitor:966 [interfaces.py:start():188] Started disk monitoring
+2024-05-31 06:59:26,895 INFO    SystemMonitor:966 [interfaces.py:start():188] Started gpu monitoring
+2024-05-31 06:59:26,895 INFO    SystemMonitor:966 [interfaces.py:start():188] Started memory monitoring
+2024-05-31 06:59:26,896 INFO    SystemMonitor:966 [interfaces.py:start():188] Started network monitoring
+2024-05-31 06:59:26,902 DEBUG   HandlerThread:966 [system_info.py:probe():150] Probing system
+2024-05-31 06:59:26,905 DEBUG   HandlerThread:966 [system_info.py:_probe_git():135] Probing git
+2024-05-31 06:59:26,910 DEBUG   HandlerThread:966 [system_info.py:_probe_git():143] Probing git done
+2024-05-31 06:59:26,910 DEBUG   HandlerThread:966 [system_info.py:probe():198] Probing system done
+2024-05-31 06:59:26,910 DEBUG   HandlerThread:966 [system_monitor.py:probe():223] {'os': 'Linux-5.19.0-45-generic-x86_64-with-glibc2.35', 'python': '3.10.0', 'heartbeatAt': '2024-05-31T06:59:26.903014', 'startedAt': '2024-05-31T06:59:26.568597', 'docker': None, 'cuda': None, 'args': (), 'state': 'running', 'program': '/notebooks/ayna/working_repo/IDM-VTON/train.py', 'codePathLocal': 'train.py', 'codePath': 'train.py', 'git': {'remote': 'https://github.com/venkateshtata/IDM-VTON', 'commit': 'b18092e79c4c89f4d646703f746419a23dac61aa'}, 'email': None, 'root': '/notebooks/ayna/working_repo/IDM-VTON', 'host': 'nsup2e39q9', 'username': 'root', 'executable': '/root/miniconda3/envs/idm/bin/python', 'cpu_count': 8, 'cpu_count_logical': 8, 'cpu_freq': {'current': 3201.8970000000004, 'min': 0.0, 'max': 0.0}, 'cpu_freq_per_core': [{'current': 3201.897, 'min': 0.0, 'max': 0.0}, {'current': 3201.897, 'min': 0.0, 'max': 0.0}, {'current': 3201.897, 'min': 0.0, 'max': 0.0}, {'current': 3201.897, 'min': 0.0, 'max': 0.0}, {'current': 3201.897, 'min': 0.0, 'max': 0.0}, {'current': 3201.897, 'min': 0.0, 'max': 0.0}, {'current': 3201.897, 'min': 0.0, 'max': 0.0}, {'current': 3201.897, 'min': 0.0, 'max': 0.0}], 'disk': {'/': {'total': 244.23077011108398, 'used': 141.8834457397461}}, 'gpu': 'NVIDIA RTX A6000', 'gpu_count': 1, 'gpu_devices': [{'name': 'NVIDIA RTX A6000', 'memory_total': 51527024640}], 'memory': {'total': 44.08214569091797}}
+2024-05-31 06:59:26,910 INFO    HandlerThread:966 [system_monitor.py:probe():224] Finished collecting system info
+2024-05-31 06:59:26,910 INFO    HandlerThread:966 [system_monitor.py:probe():227] Publishing system info
+2024-05-31 06:59:26,910 DEBUG   HandlerThread:966 [system_info.py:_save_conda():207] Saving list of conda packages installed into the current environment
+2024-05-31 06:59:27,812 INFO    Thread-12 :966 [dir_watcher.py:_on_file_created():271] file/dir created: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/conda-environment.yaml
+2024-05-31 06:59:28,629 DEBUG   HandlerThread:966 [system_info.py:_save_conda():222] Saving conda packages done
+2024-05-31 06:59:28,630 INFO    HandlerThread:966 [system_monitor.py:probe():229] Finished publishing system info
+2024-05-31 06:59:28,634 DEBUG   SenderThread:966 [sender.py:send():378] send: files
+2024-05-31 06:59:28,634 INFO    SenderThread:966 [sender.py:_save_file():1389] saving file wandb-metadata.json with policy now
+2024-05-31 06:59:28,729 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: python_packages
+2024-05-31 06:59:28,730 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 06:59:28,731 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: python_packages
+2024-05-31 06:59:28,733 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 06:59:28,815 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/conda-environment.yaml
+2024-05-31 06:59:28,815 INFO    Thread-12 :966 [dir_watcher.py:_on_file_created():271] file/dir created: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/requirements.txt
+2024-05-31 06:59:28,815 INFO    Thread-12 :966 [dir_watcher.py:_on_file_created():271] file/dir created: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/wandb-metadata.json
+2024-05-31 06:59:28,849 DEBUG   SenderThread:966 [sender.py:send():378] send: telemetry
+2024-05-31 06:59:28,849 DEBUG   SenderThread:966 [sender.py:send():378] send: config
+2024-05-31 06:59:28,886 INFO    wandb-upload_0:966 [upload_job.py:push():130] Uploaded file /tmp/tmppe8h_x9kwandb/xu4274vm-wandb-metadata.json
+2024-05-31 06:59:29,816 INFO    Thread-12 :966 [dir_watcher.py:_on_file_created():271] file/dir created: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 06:59:31,817 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 06:59:32,173 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 06:59:37,174 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 06:59:42,175 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 06:59:43,730 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 06:59:43,730 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 06:59:47,847 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 06:59:53,525 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 06:59:53,829 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 06:59:58,745 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 06:59:58,745 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 06:59:58,835 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 06:59:59,836 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/config.yaml
+2024-05-31 06:59:59,837 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:00:03,925 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:08,926 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:13,730 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:00:13,731 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:00:14,815 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:19,815 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:24,817 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:26,896 DEBUG   SystemMonitor:966 [system_monitor.py:_start():172] Starting system metrics aggregation loop
+2024-05-31 07:00:26,897 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:00:28,730 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:00:28,731 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:00:29,830 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:34,831 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:39,832 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:43,730 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:00:43,731 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:00:44,856 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:49,857 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:54,857 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:00:56,897 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:00:58,730 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:00:58,731 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:01:00,835 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:05,836 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:10,837 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:13,731 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:01:13,731 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:01:15,872 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:20,873 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:25,874 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:26,898 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:01:28,731 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:01:28,732 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:01:31,842 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:36,843 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:41,844 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:43,731 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:01:43,732 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:01:47,844 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:52,845 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:56,898 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:01:57,899 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:01:58,731 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:01:58,731 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:02:03,886 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:08,887 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:13,731 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:02:13,732 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:02:14,780 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:19,781 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:24,782 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:26,899 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:02:28,731 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:02:28,732 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:02:29,858 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:34,859 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:39,894 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:02:39,938 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:43,733 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:02:43,733 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:02:45,889 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:51,005 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:51,898 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:02:55,899 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:02:56,454 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:02:56,900 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:02:58,732 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:02:58,732 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:02:59,901 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:01,818 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:03:03,903 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:07,793 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:03:09,905 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:13,257 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:03:13,732 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:03:13,732 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:03:13,906 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:17,908 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:18,726 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:03:21,909 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:24,188 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:03:26,900 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:03:27,911 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:28,732 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: stop_status
+2024-05-31 07:03:28,733 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: stop_status
+2024-05-31 07:03:29,867 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:03:29,912 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:30,262 DEBUG   SenderThread:966 [sender.py:send():378] send: exit
+2024-05-31 07:03:30,262 INFO    SenderThread:966 [sender.py:send_exit():585] handling exit code: 255
+2024-05-31 07:03:30,262 INFO    SenderThread:966 [sender.py:send_exit():587] handling runtime: 243
+2024-05-31 07:03:30,263 INFO    SenderThread:966 [sender.py:_save_file():1389] saving file wandb-summary.json with policy end
+2024-05-31 07:03:30,263 INFO    SenderThread:966 [sender.py:send_exit():593] send defer
+2024-05-31 07:03:30,263 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,263 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 0
+2024-05-31 07:03:30,264 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,264 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 0
+2024-05-31 07:03:30,264 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 1
+2024-05-31 07:03:30,264 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,264 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 1
+2024-05-31 07:03:30,264 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,264 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 1
+2024-05-31 07:03:30,264 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 2
+2024-05-31 07:03:30,264 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,264 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 2
+2024-05-31 07:03:30,264 INFO    HandlerThread:966 [system_monitor.py:finish():203] Stopping system monitor
+2024-05-31 07:03:30,265 DEBUG   SystemMonitor:966 [system_monitor.py:_start():179] Finished system metrics aggregation loop
+2024-05-31 07:03:30,265 DEBUG   SystemMonitor:966 [system_monitor.py:_start():183] Publishing last batch of metrics
+2024-05-31 07:03:30,266 INFO    HandlerThread:966 [interfaces.py:finish():200] Joined cpu monitor
+2024-05-31 07:03:30,266 INFO    HandlerThread:966 [interfaces.py:finish():200] Joined disk monitor
+2024-05-31 07:03:30,271 INFO    HandlerThread:966 [interfaces.py:finish():200] Joined gpu monitor
+2024-05-31 07:03:30,271 INFO    HandlerThread:966 [interfaces.py:finish():200] Joined memory monitor
+2024-05-31 07:03:30,271 INFO    HandlerThread:966 [interfaces.py:finish():200] Joined network monitor
+2024-05-31 07:03:30,272 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,272 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 2
+2024-05-31 07:03:30,272 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 3
+2024-05-31 07:03:30,272 DEBUG   SenderThread:966 [sender.py:send():378] send: stats
+2024-05-31 07:03:30,272 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,272 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 3
+2024-05-31 07:03:30,272 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,272 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 3
+2024-05-31 07:03:30,272 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 4
+2024-05-31 07:03:30,272 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,272 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 4
+2024-05-31 07:03:30,273 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,273 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 4
+2024-05-31 07:03:30,273 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 5
+2024-05-31 07:03:30,273 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,273 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 5
+2024-05-31 07:03:30,273 DEBUG   SenderThread:966 [sender.py:send():378] send: summary
+2024-05-31 07:03:30,276 INFO    SenderThread:966 [sender.py:_save_file():1389] saving file wandb-summary.json with policy end
+2024-05-31 07:03:30,276 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,276 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 5
+2024-05-31 07:03:30,276 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 6
+2024-05-31 07:03:30,277 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,277 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 6
+2024-05-31 07:03:30,277 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,277 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 6
+2024-05-31 07:03:30,277 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 7
+2024-05-31 07:03:30,277 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: status_report
+2024-05-31 07:03:30,277 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:30,277 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 7
+2024-05-31 07:03:30,277 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:30,277 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 7
+2024-05-31 07:03:30,913 INFO    Thread-12 :966 [dir_watcher.py:_on_file_created():271] file/dir created: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/wandb-summary.json
+2024-05-31 07:03:31,110 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 8
+2024-05-31 07:03:31,111 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:31,111 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 8
+2024-05-31 07:03:31,111 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:31,111 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 8
+2024-05-31 07:03:31,111 INFO    SenderThread:966 [job_builder.py:build():432] Attempting to build job artifact
+2024-05-31 07:03:31,111 INFO    SenderThread:966 [job_builder.py:_get_source_type():565] is repo sourced job
+2024-05-31 07:03:31,139 INFO    SenderThread:966 [job_builder.py:build():541] adding wandb-job metadata file
+2024-05-31 07:03:31,148 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 9
+2024-05-31 07:03:31,148 DEBUG   SenderThread:966 [sender.py:send():378] send: artifact
+2024-05-31 07:03:31,150 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:31,150 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 9
+2024-05-31 07:03:31,262 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: poll_exit
+2024-05-31 07:03:31,588 INFO    wandb-upload_1:966 [upload_job.py:push():85] Skipped uploading /root/.local/share/wandb/artifacts/staging/tmpomapjqm7
+2024-05-31 07:03:31,777 INFO    wandb-upload_0:966 [upload_job.py:push():88] Uploaded file /tmp/tmp40w7dtpa/wandb-job.json
+2024-05-31 07:03:31,913 INFO    Thread-12 :966 [dir_watcher.py:_on_file_modified():288] file/dir modified: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:32,339 INFO    SenderThread:966 [sender.py:send_artifact():1467] sent artifact job-https___github.com_venkateshtata_IDM-VTON_train.py - {'id': 'QXJ0aWZhY3Q6ODU1NjA1Mjg3', 'state': 'PENDING', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjE4MDk1NjM5OQ==', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6ODU1NjAxNTE1', 'versionIndex': 0}}}
+2024-05-31 07:03:32,339 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:32,339 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 9
+2024-05-31 07:03:32,339 INFO    SenderThread:966 [dir_watcher.py:finish():358] shutting down directory watcher
+2024-05-31 07:03:32,914 INFO    SenderThread:966 [dir_watcher.py:finish():388] scan: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files
+2024-05-31 07:03:32,914 INFO    SenderThread:966 [dir_watcher.py:finish():402] scan save: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/requirements.txt requirements.txt
+2024-05-31 07:03:32,914 INFO    SenderThread:966 [dir_watcher.py:finish():402] scan save: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/wandb-metadata.json wandb-metadata.json
+2024-05-31 07:03:32,915 INFO    SenderThread:966 [dir_watcher.py:finish():402] scan save: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/wandb-summary.json wandb-summary.json
+2024-05-31 07:03:32,917 INFO    SenderThread:966 [dir_watcher.py:finish():402] scan save: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/conda-environment.yaml conda-environment.yaml
+2024-05-31 07:03:32,917 INFO    SenderThread:966 [dir_watcher.py:finish():402] scan save: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log output.log
+2024-05-31 07:03:32,920 INFO    SenderThread:966 [dir_watcher.py:finish():402] scan save: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/config.yaml config.yaml
+2024-05-31 07:03:32,921 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 10
+2024-05-31 07:03:32,921 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: poll_exit
+2024-05-31 07:03:32,921 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:32,921 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 10
+2024-05-31 07:03:32,923 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:32,923 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 10
+2024-05-31 07:03:32,923 INFO    SenderThread:966 [file_pusher.py:finish():169] shutting down file pusher
+2024-05-31 07:03:33,113 INFO    wandb-upload_1:966 [upload_job.py:push():130] Uploaded file /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/requirements.txt
+2024-05-31 07:03:33,138 INFO    wandb-upload_3:966 [upload_job.py:push():130] Uploaded file /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/output.log
+2024-05-31 07:03:33,139 INFO    wandb-upload_4:966 [upload_job.py:push():130] Uploaded file /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/config.yaml
+2024-05-31 07:03:33,156 INFO    wandb-upload_2:966 [upload_job.py:push():130] Uploaded file /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/conda-environment.yaml
+2024-05-31 07:03:33,181 INFO    wandb-upload_0:966 [upload_job.py:push():130] Uploaded file /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/files/wandb-summary.json
+2024-05-31 07:03:33,264 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: poll_exit
+2024-05-31 07:03:33,264 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: poll_exit
+2024-05-31 07:03:33,381 INFO    Thread-11 (_thread_body):966 [sender.py:transition_state():613] send defer: 11
+2024-05-31 07:03:33,382 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:33,382 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 11
+2024-05-31 07:03:33,382 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:33,382 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 11
+2024-05-31 07:03:33,382 INFO    SenderThread:966 [file_pusher.py:join():175] waiting for file pusher
+2024-05-31 07:03:33,383 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 12
+2024-05-31 07:03:33,384 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:33,384 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 12
+2024-05-31 07:03:33,384 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:33,384 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 12
+2024-05-31 07:03:33,384 INFO    SenderThread:966 [file_stream.py:finish():601] file stream finish called
+2024-05-31 07:03:33,540 INFO    SenderThread:966 [file_stream.py:finish():605] file stream finish is done
+2024-05-31 07:03:33,540 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 13
+2024-05-31 07:03:33,540 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:33,540 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 13
+2024-05-31 07:03:33,540 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:33,540 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 13
+2024-05-31 07:03:33,541 INFO    SenderThread:966 [sender.py:transition_state():613] send defer: 14
+2024-05-31 07:03:33,541 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: defer
+2024-05-31 07:03:33,541 INFO    HandlerThread:966 [handler.py:handle_request_defer():184] handle defer: 14
+2024-05-31 07:03:33,541 DEBUG   SenderThread:966 [sender.py:send():378] send: final
+2024-05-31 07:03:33,541 DEBUG   SenderThread:966 [sender.py:send():378] send: footer
+2024-05-31 07:03:33,541 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: defer
+2024-05-31 07:03:33,541 INFO    SenderThread:966 [sender.py:send_request_defer():609] handle sender defer: 14
+2024-05-31 07:03:33,542 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: poll_exit
+2024-05-31 07:03:33,542 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: poll_exit
+2024-05-31 07:03:33,542 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: poll_exit
+2024-05-31 07:03:33,543 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: server_info
+2024-05-31 07:03:33,543 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: poll_exit
+2024-05-31 07:03:33,543 DEBUG   SenderThread:966 [sender.py:send_request():405] send_request: server_info
+2024-05-31 07:03:33,544 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: get_summary
+2024-05-31 07:03:33,545 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: sampled_history
+2024-05-31 07:03:33,545 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: internal_messages
+2024-05-31 07:03:33,580 INFO    MainThread:966 [wandb_run.py:_footer_history_summary_info():3994] rendering history
+2024-05-31 07:03:33,580 INFO    MainThread:966 [wandb_run.py:_footer_history_summary_info():4026] rendering summary
+2024-05-31 07:03:33,580 INFO    MainThread:966 [wandb_run.py:_footer_sync_info():3953] logging synced files
+2024-05-31 07:03:33,580 DEBUG   HandlerThread:966 [handler.py:handle_request():158] handle_request: shutdown
+2024-05-31 07:03:33,581 INFO    HandlerThread:966 [handler.py:finish():882] shutting down handler
+2024-05-31 07:03:34,543 INFO    WriterThread:966 [datastore.py:close():296] close: /notebooks/ayna/working_repo/IDM-VTON/wandb/run-20240531_065926-8fbulplh/run-8fbulplh.wandb
+2024-05-31 07:03:34,580 INFO    SenderThread:966 [sender.py:finish():1545] shutting down sender
+2024-05-31 07:03:34,580 INFO    SenderThread:966 [file_pusher.py:finish():169] shutting down file pusher
+2024-05-31 07:03:34,580 INFO    SenderThread:966 [file_pusher.py:join():175] waiting for file pusher
