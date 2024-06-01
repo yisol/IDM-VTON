@@ -1,0 +1,88 @@
+{
+    "os": "Linux-5.19.0-45-generic-x86_64-with-glibc2.35",
+    "python": "3.10.0",
+    "heartbeatAt": "2024-06-01T11:46:04.001236",
+    "startedAt": "2024-06-01T11:46:03.571667",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/notebooks/ayna/working_repo/IDM-VTON/train.py",
+    "codePathLocal": "train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/venkateshtata/IDM-VTON",
+        "commit": "b2a6b42338e1d7312b4d92264c9f04669d82cdb4"
+    },
+    "email": "venkateshtata9@gmail.com",
+    "root": "/notebooks/ayna/working_repo/IDM-VTON",
+    "host": "nvcr5o23tr",
+    "username": "root",
+    "executable": "/root/miniconda3/envs/idm/bin/python3",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 3200.3139999999994,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.314,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 244.23077011108398,
+            "used": 158.60507202148438
+        }
+    },
+    "gpu": "NVIDIA RTX A6000",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA RTX A6000",
+            "memory_total": 51527024640
+        }
+    ],
+    "memory": {
+        "total": 44.08214569091797
+    }
+}

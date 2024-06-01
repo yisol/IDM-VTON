@@ -45,12 +45,12 @@ def parse_args():
     parser.add_argument("--height", type=int, default=512)
     parser.add_argument("--num_inference_steps", type=int, default=30)
     parser.add_argument("--output_dir", type=str, default="result")
-    parser.add_argument("--data_dir", type=str, default="/notebooks/ayna/working_repo/IDM-VTON/dataset")
+    parser.add_argument("--data_dir", type=str, default="/notebooks/ayna/working_repo/IDM-VTON/dataset/deepfashion_dataset")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_epochs", type=int, default=100)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
-    parser.add_argument("--save_interval", type=int, default=100)
+    parser.add_argument("--save_interval", type=int, default=50)
     parser.add_argument("--guidance_scale", type=float, default=2.0)
     parser.add_argument("--mixed_precision", type=str, default=None, choices=["no", "fp16", "bf16"])
     parser.add_argument("--enable_xformers_memory_efficient_attention", action="store_true", help="Whether or not to use xformers.")
@@ -74,7 +74,7 @@ class VitonHDTestDataset(data.Dataset):
         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
         self.toTensor = transforms.ToTensor()
 
-        with open(os.path.join(dataroot_path, phase, "vitonhd_" + phase + "_tagged.json"), "r") as file1:
+        with open(os.path.join(dataroot_path, phase, "deepfashion_" + phase + "_tagged.json"), "r") as file1:
             data1 = json.load(file1)
 
         annotation_list = ["sleeveLength", "neckLine", "item"]
@@ -131,7 +131,7 @@ class VitonHDTestDataset(data.Dataset):
             cloth_annotation = "shirts"
         cloth = Image.open(os.path.join(self.dataroot, self.phase, "cloth", c_name))
 
-        im_pil_big = Image.open(os.path.join(self.dataroot, self.phase, "image", im_name)).resize((self.width, self.height))
+        im_pil_big = Image.open(os.path.join(self.dataroot, self.phase, "images", im_name)).resize((self.width, self.height))
         image = self.transform(im_pil_big)
 
         mask = Image.open(os.path.join(self.dataroot, self.phase, "agnostic-mask", im_name.replace('.jpg','_mask.png'))).resize((self.width, self.height))
@@ -153,6 +153,9 @@ class VitonHDTestDataset(data.Dataset):
         result["im_mask"] = im_mask
         result["caption_cloth"] = "a photo of " + cloth_annotation
         result["caption"] = "model is wearing a " + cloth_annotation
+        
+        resize_transform = transforms.Resize((1024, 768))
+        pose_img_resized = resize_transform(pose_img.unsqueeze(0)).squeeze(0)
         result["pose_img"] = pose_img
 
         return result
@@ -318,7 +321,7 @@ def main():
     unet.requires_grad_(True)
     image_encoder.requires_grad_(False)
     
-    initialize_weights(unet)
+    # initialize_weights(unet)
     # initialize_weights(image_encoder)
 
     unet.to(accelerator.device, weight_dtype)

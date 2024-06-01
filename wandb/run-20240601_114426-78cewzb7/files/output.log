@@ -1,0 +1,18 @@
+/root/miniconda3/envs/idm/lib/python3.10/site-packages/huggingface_hub/file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+{'thresholding', 'clip_sample_range', 'dynamic_thresholding_ratio', 'variance_type'} was not found in config. Values will be initialized to default values.
+/root/miniconda3/envs/idm/lib/python3.10/site-packages/huggingface_hub/file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+The config attributes {'decay': 0.9999, 'inv_gamma': 1.0, 'min_decay': 0.0, 'optimization_step': 37000, 'power': 0.6666666666666666, 'update_after_step': 0, 'use_ema_warmup': False} were passed to UNet2DConditionModel, but are not expected and will be ignored. Please verify your config.json configuration file.
+{'reverse_transformer_layers_per_block', 'dropout'} was not found in config. Values will be initialized to default values.
+{'attention_type', 'dropout', 'reverse_transformer_layers_per_block', 'addition_embed_type'} was not found in config. Values will be initialized to default values.
+Some weights of the model checkpoint were not used when initializing UNet2DConditionModel:
+ ['add_embedding.linear_1.bias, add_embedding.linear_1.weight, add_embedding.linear_2.bias, add_embedding.linear_2.weight']
+Traceback (most recent call last):
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 361, in <module>
+    main()
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 333, in main
+    train_dataset = VitonHDTestDataset(dataroot_path=args.data_dir, phase="train", order="paired", size=(args.height, args.width))
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 77, in __init__
+    with open(os.path.join(dataroot_path, phase, "deepfashion_" + phase + "_tagged.json"), "r") as file1:
+FileNotFoundError: [Errno 2] No such file or directory: '/notebooks/ayna/working_repo/IDM-VTON/dataset/train/deepfashion_train_tagged.json'
