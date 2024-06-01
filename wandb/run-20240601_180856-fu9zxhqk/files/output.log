@@ -1,0 +1,42 @@
+/root/miniconda3/envs/idm/lib/python3.10/site-packages/huggingface_hub/file_download.py:1132: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+{'thresholding', 'dynamic_thresholding_ratio', 'variance_type', 'clip_sample_range'} was not found in config. Values will be initialized to default values.
+The config attributes {'decay': 0.9999, 'inv_gamma': 1.0, 'min_decay': 0.0, 'optimization_step': 37000, 'power': 0.6666666666666666, 'update_after_step': 0, 'use_ema_warmup': False} were passed to UNet2DConditionModel, but are not expected and will be ignored. Please verify your config.json configuration file.
+{'reverse_transformer_layers_per_block', 'dropout'} was not found in config. Values will be initialized to default values.
+{'addition_embed_type', 'reverse_transformer_layers_per_block', 'attention_type', 'dropout'} was not found in config. Values will be initialized to default values.
+Some weights of the model checkpoint were not used when initializing UNet2DConditionModel:
+ ['add_embedding.linear_1.bias, add_embedding.linear_1.weight, add_embedding.linear_2.bias, add_embedding.linear_2.weight']
+{'image_encoder'} was not found in config. Values will be initialized to default values.
+Loading pipeline components...: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 8/8 [00:00<00:00, 394.56it/s]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 30/30 [00:42<00:00,  1.40s/it]
+Traceback (most recent call last):
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 363, in <module>
+    main()
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 360, in main
+    train(args, train_dataloader, model, unet, image_encoder, optimizer, accelerator)
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 263, in train
+    lpips_score, ssim_score, clip_similarity = compute_metrics(batch_image_tensor, images_tensor)
+  File "/notebooks/ayna/working_repo/IDM-VTON/train.py", line 41, in compute_metrics
+    lpips_score = lpips_model(real_images, generated_images).mean().item()
+NameError: name 'lpips_model' is not defined

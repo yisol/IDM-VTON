@@ -1,0 +1,88 @@
+{
+    "os": "Linux-5.19.0-45-generic-x86_64-with-glibc2.35",
+    "python": "3.10.0",
+    "heartbeatAt": "2024-06-01T18:13:09.544681",
+    "startedAt": "2024-06-01T18:13:09.225372",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/notebooks/ayna/working_repo/IDM-VTON/train.py",
+    "codePathLocal": "train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/venkateshtata/IDM-VTON",
+        "commit": "b90341f8a3baaab6df6853649bf0346bff4aab77"
+    },
+    "email": null,
+    "root": "/notebooks/ayna/working_repo/IDM-VTON",
+    "host": "nal20gaquo",
+    "username": "root",
+    "executable": "/root/miniconda3/envs/idm/bin/python3",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "cpu_freq": {
+        "current": 3200.8090000000007,
+        "min": 0.0,
+        "max": 0.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        },
+        {
+            "current": 3200.809,
+            "min": 0.0,
+            "max": 0.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 244.23077011108398,
+            "used": 168.75151824951172
+        }
+    },
+    "gpu": "NVIDIA RTX A6000",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA RTX A6000",
+            "memory_total": 51527024640
+        }
+    ],
+    "memory": {
+        "total": 44.08214569091797
+    }
+}

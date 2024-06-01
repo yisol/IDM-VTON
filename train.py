@@ -29,7 +29,13 @@ from src.unet_hacked_garmnet import UNet2DConditionModel as UNet2DConditionModel
 from src.tryon_pipeline import StableDiffusionXLInpaintPipeline as TryonPipeline
 import wandb
 
-wandb.login(key='6b9529ffc8d1630ecad71718647e2e14c98bf360')
+from lpips import LPIPS
+from pytorch_msssim import ssim
+from transformers import CLIPProcessor, CLIPModel
+
+
+wandb.login(key=os.environ['wandb_key'])
+
 
 weight_dtype = torch.float16
 
@@ -49,7 +55,7 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_epochs", type=int, default=100)
-    parser.add_argument("--learning_rate", type=float, default=1e-4)
+    parser.add_argument("--learning_rate", type=float, default=1e-3)
     parser.add_argument("--save_interval", type=int, default=50)
     parser.add_argument("--guidance_scale", type=float, default=2.0)
     parser.add_argument("--mixed_precision", type=str, default=None, choices=["no", "fp16", "bf16"])
@@ -162,11 +168,44 @@ class VitonHDTestDataset(data.Dataset):
 
     def __len__(self):
         return len(self.im_names)
+    
 
-def train(args, train_dataloader, model, unet, image_encoder, optimizer, accelerator):
+def compute_metrics(real_images, generated_images, lpips_model, clip_model, clip_processor, device):
+    real_images = real_images.to(device)
+    generated_images = generated_images.to(device)
+    
+    real_images_np = real_images.detach().cpu().numpy().transpose(0, 2, 3, 1)
+    generated_images_np = generated_images.detach().cpu().numpy().transpose(0, 2, 3, 1)
+    
+    # Compute LPIPS score
+    lpips_score = lpips_model(real_images, generated_images).mean().item()
+    
+    # Compute SSIM score
+    ssim_score = ssim(real_images, generated_images, data_range=1.0).item()
+    
+    # Compute CLIP image similarity
+    real_images_pil = [Image.fromarray((img * 255).astype('uint8')) for img in real_images_np]
+    generated_images_pil = [Image.fromarray((img * 255).astype('uint8')) for img in generated_images_np]
+    
+    real_images_clip = clip_processor(images=real_images_pil, return_tensors="pt")['pixel_values'].to(device)
+    generated_images_clip = clip_processor(images=generated_images_pil, return_tensors="pt")['pixel_values'].to(device)
+    
+    real_features = clip_model.get_image_features(real_images_clip).detach().cpu().numpy()
+    generated_features = clip_model.get_image_features(generated_images_clip).detach().cpu().numpy()
+    
+    clip_similarity = np.mean(np.dot(real_features, generated_features.T).diagonal())
+    
+    return lpips_score, ssim_score, clip_similarity
+
+
+
+
+
+def train(args, train_dataloader, model, unet, image_encoder, optimizer, accelerator, lpips_model, clip_model, clip_processor):
     unet.train()
     image_encoder.train()
     global_step = 0
+    device = accelerator.device
 
     for epoch in range(args.num_epochs):
         for step, batch in enumerate(train_dataloader):
@@ -226,8 +265,9 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                 optimizer.step()
                 optimizer.zero_grad()
                 
-                if global_step % 10 == 0:
-                    wandb.log({"Step": global_step, "Loss": loss.item()})
+                # Compute and log metrics
+                lpips_score, ssim_score, clip_similarity = compute_metrics(batch_image_tensor, images_tensor, lpips_model, clip_model, clip_processor, device)
+                wandb.log({"Step": global_step, "Loss": loss.item(), "LPIPS": lpips_score, "SSIM": ssim_score, "CLIP Similarity": clip_similarity})
 
                 if global_step % args.save_interval == 0:
                     print("Global_step: ", global_step)
@@ -235,41 +275,10 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                         x_sample = transforms.ToTensor()(images[i])
                         torchvision.utils.save_image(x_sample, os.path.join(args.output_dir, f"step_{global_step}_{batch['im_name'][i]}"))
                         print("Images generated!")
-                    # Generate images from the same seed
-                    seed_generator = torch.Generator(model.device).manual_seed(42)  # Use a fixed seed
-                    same_seed_images = model(
-                        prompt_embeds=prompt_embeds,
-                        negative_prompt_embeds=negative_prompt_embeds,
-                        pooled_prompt_embeds=pooled_prompt_embeds,
-                        negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
-                        num_inference_steps=args.num_inference_steps,
-                        generator=seed_generator,
-                        strength=1.0,
-                        pose_img=batch['pose_img_resized'].to(accelerator.device, dtype=weight_dtype),
-                        text_embeds_cloth=prompt_embeds_c,
-                        cloth=batch["cloth_pure_resized"].to(accelerator.device, dtype=weight_dtype),
-                        mask_image=batch['inpaint_mask'].to(accelerator.device, dtype=weight_dtype),
-                        image=(batch['image'].to(accelerator.device, dtype=weight_dtype) + 1.0) / 2.0,
-                        height=args.height,
-                        width=args.width,
-                        guidance_scale=args.guidance_scale,
-                        ip_adapter_image=image_embeds.to(accelerator.device, dtype=weight_dtype)
-                    )[0]
-
                     # Log generated images to wandb
                     wandb.log({f"Generated Images step {global_step}": [wandb.Image(img) for img in images]})
-                    wandb.log({f"Generated Images with same seed step {global_step}": [wandb.Image(img) for img in same_seed_images]})
 
                 global_step += 1
-
-
-                
-def initialize_weights(model):
-    for name, param in model.named_parameters():
-        if 'weight' in name:
-            torch.nn.init.normal_(param, mean=0.0, std=0.02)
-        elif 'bias' in name:
-            torch.nn.init.constant_(param, 0)
 
 
 def main():
@@ -345,7 +354,13 @@ def main():
     
     model, optimizer, train_dataloader = accelerator.prepare(model, optimizer, train_dataloader)
 
-    train(args, train_dataloader, model, unet, image_encoder, optimizer, accelerator)
+    # Define the metric models
+    lpips_model = LPIPS(net='alex').to(accelerator.device)  # Move lpips_model to the correct device
+    clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(accelerator.device)
+    clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+
+    train(args, train_dataloader, model, unet, image_encoder, optimizer, accelerator, lpips_model, clip_model, clip_processor)
+
 
 if __name__ == "__main__":
     main()
