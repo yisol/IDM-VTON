@@ -35,7 +35,7 @@ weight_dtype = torch.float16
 
 logger = get_logger(__name__, log_level="INFO")
 
-wandb.init(project="Ayna")
+wandb.init(project="Ayna-Finetune")
 
 
 def parse_args():
@@ -264,6 +264,9 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                         x_sample = transforms.ToTensor()(images[i])
                         torchvision.utils.save_image(x_sample, os.path.join(args.output_dir, f"step_{global_step}_{batch['im_name'][i]}"))
                         print("Images generated!")
+                        # Log images to wandb
+                    wandb.log({f"Generated Images step {global_step}": [wandb.Image(img) for img in images]})
+
 
                 global_step += 1
 

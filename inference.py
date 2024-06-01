@@ -81,7 +81,7 @@ def parse_args():
     parser.add_argument("--num_inference_steps",type=int,default=30,)
     parser.add_argument("--output_dir",type=str,default="result",)
     parser.add_argument("--unpaired",action="store_true",)
-    parser.add_argument("--data_dir",type=str,default="/home/omnious/workspace/yisol/Dataset/zalando")
+    parser.add_argument("--data_dir",type=str,default="/notebooks/ayna/working_repo/IDM-VTON/dataset")
     parser.add_argument("--seed", type=int, default=42,)
     parser.add_argument("--test_batch_size", type=int, default=2,)
     parser.add_argument("--guidance_scale",type=float,default=2.0,)
@@ -122,7 +122,8 @@ class VitonHDTestDataset(data.Dataset):
         self.toTensor = transforms.ToTensor()
 
         with open(
-            os.path.join(dataroot_path, phase, "vitonhd_" + phase + "_tagged.json"), "r"
+            os.path.join(dataroot_path, phase, "deepfashion_" + phase + "_tagged.json"), "r"
+            # os.path.join(dataroot_path, phase, "vitonhd_" + phase + "_tagged.json"), "r"
         ) as file1:
             data1 = json.load(file1)
 
@@ -190,7 +191,8 @@ class VitonHDTestDataset(data.Dataset):
         cloth = Image.open(os.path.join(self.dataroot, self.phase, "cloth", c_name))
 
         im_pil_big = Image.open(
-            os.path.join(self.dataroot, self.phase, "image", im_name)
+            # os.path.join(self.dataroot, self.phase, "image", im_name)
+            os.path.join(self.dataroot, self.phase, "images", im_name)
         ).resize((self.width,self.height))
         image = self.transform(im_pil_big)
 
@@ -233,7 +235,9 @@ class VitonHDTestDataset(data.Dataset):
         result["caption"] = "model is wearing a " + cloth_annotation
         # print("caption: ",result["caption"])
         
-        result["pose_img"] = pose_img
+        resize_transform = transforms.Resize((1024, 768))
+        pose_img_resized = resize_transform(pose_img.unsqueeze(0)).squeeze(0)
+        result["pose_img"] = pose_img_resized
         # print("pose_img: ", result["pose_img"].shape)
         
         
