@@ -28,6 +28,7 @@ from src.unet_hacked_tryon import UNet2DConditionModel
 from src.unet_hacked_garmnet import UNet2DConditionModel as UNet2DConditionModel_ref
 from src.tryon_pipeline import StableDiffusionXLInpaintPipeline as TryonPipeline
 import wandb
+
 wandb.login(key='6b9529ffc8d1630ecad71718647e2e14c98bf360')
 
 weight_dtype = torch.float16
@@ -46,10 +47,10 @@ def parse_args():
     parser.add_argument("--output_dir", type=str, default="result")
     parser.add_argument("--data_dir", type=str, default="/notebooks/ayna/working_repo/IDM-VTON/dataset")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--batch_size", type=int, default=24)
     parser.add_argument("--num_epochs", type=int, default=100)
     parser.add_argument("--learning_rate", type=float, default=1e-4)
-    parser.add_argument("--save_interval", type=int, default=50)
+    parser.add_argument("--save_interval", type=int, default=100)
     parser.add_argument("--guidance_scale", type=float, default=2.0)
     parser.add_argument("--mixed_precision", type=str, default=None, choices=["no", "fp16", "bf16"])
     parser.add_argument("--enable_xformers_memory_efficient_attention", action="store_true", help="Whether or not to use xformers.")
@@ -191,6 +192,23 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                     prompt, num_images_per_prompt=1, do_classifier_free_guidance=False)[0]
 
                 generator = torch.Generator(model.device).manual_seed(args.seed) if args.seed is not None else None
+                
+                target_size = batch['image'].shape[2:]
+                # Resize pose_img and cloth_pure
+                batch['pose_img_resized'] = F.interpolate(batch['pose_img'], size=target_size, mode='bilinear', align_corners=False)
+                batch['cloth_pure_resized'] = F.interpolate(batch['cloth_pure'], size=target_size, mode='bilinear', align_corners=False)
+
+                
+#                 print("prompt_embeds shape: ", prompt_embeds.shape)
+#                 print("negative_prompt_embeds shape: ", negative_prompt_embeds.shape)
+#                 print("pooled_prompt_embeds shape: ", pooled_prompt_embeds.shape)
+#                 print("negative_pooled_prompt_embeds shape: ", negative_pooled_prompt_embeds.shape)
+                
+#                 print("batch['pose_img'] shape: ", batch['pose_img'].shape)
+#                 print("batch['cloth_pure'] shape: ", batch["cloth_pure"].shape)
+#                 print("batch['inpaint_mask'] shape: ", batch['inpaint_mask'].shape)
+#                 print("batch['image'] shape: ", batch['image'].shape)
+                
                 images = model(
                     prompt_embeds=prompt_embeds,
                     negative_prompt_embeds=negative_prompt_embeds,
@@ -199,11 +217,11 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                     num_inference_steps=args.num_inference_steps,
                     generator=generator,
                     strength=1.0,
-                    pose_img=batch['pose_img'].to(accelerator.device, dtype=weight_dtype),  # Ensure pose_img is cast to weight_dtype
+                    pose_img=batch['pose_img_resized'].to(accelerator.device, dtype=weight_dtype),
                     text_embeds_cloth=prompt_embeds_c,
-                    cloth=batch["cloth_pure"].to(accelerator.device, dtype=weight_dtype),  # Ensure cloth is cast to weight_dtype
-                    mask_image=batch['inpaint_mask'].to(accelerator.device, dtype=weight_dtype),  # Ensure inpaint_mask is cast to weight_dtype
-                    image=(batch['image'].to(accelerator.device, dtype=weight_dtype) + 1.0) / 2.0,  # Ensure image is cast to weight_dtype
+                    cloth=batch["cloth_pure_resized"].to(accelerator.device, dtype=weight_dtype),
+                    mask_image=batch['inpaint_mask'].to(accelerator.device, dtype=weight_dtype),
+                    image=(batch['image'].to(accelerator.device, dtype=weight_dtype) + 1.0) / 2.0,
                     height=args.height,
                     width=args.width,
                     guidance_scale=args.guidance_scale,
