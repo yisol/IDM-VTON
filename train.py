@@ -69,9 +69,9 @@ def pil_to_tensor(images):
     images = torch.from_numpy(images.transpose(2, 0, 1))
     return images
 
-class VitonHDTestDataset(data.Dataset):
+class DeepFashionTrainDataset(data.Dataset):
     def __init__(self, dataroot_path: str, phase: Literal["train", "test"], order: Literal["paired", "unpaired"] = "paired", size: Tuple[int, int] = (512, 384)):
-        super(VitonHDTestDataset, self).__init__()
+        super(DeepFashionTrainDataset, self).__init__()
         self.dataroot = dataroot_path
         self.phase = phase
         self.height = size[0]
@@ -329,7 +329,7 @@ def main():
     if args.enable_xformers_memory_efficient_attention and is_xformers_available():
         unet.enable_xformers_memory_efficient_attention()
 
-    train_dataset = VitonHDTestDataset(dataroot_path=args.data_dir, phase="train", order="paired", size=(args.height, args.width))
+    train_dataset = DeepFashionTrainDataset(dataroot_path=args.data_dir, phase="train", order="paired", size=(args.height, args.width))
     train_dataloader = torch.utils.data.DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size, num_workers=4)
 
     model = TryonPipeline.from_pretrained(

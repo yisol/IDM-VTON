@@ -1,16 +1,4 @@
-# coding=utf-8
-# Copyright 2023 The HuggingFace Inc. team. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Literal
 from ip_adapter.ip_adapter import Resampler
 
@@ -209,47 +197,18 @@ class VitonHDTestDataset(data.Dataset):
  
         result = {}
         result["c_name"] = c_name
-        # print("c_name: ", c_name)
-        
         result["im_name"] = im_name
-        # print("im_name: ", im_name)
-        
-        result["image"] = image
-        # print("image: ", image.shape)
-        
-        result["cloth_pure"] = self.transform(cloth)
-        # print("cloth_pure: ", result["cloth_pure"].shape)
-        
-        result["cloth"] = self.clip_processor(images=cloth, return_tensors="pt").pixel_values
-        # print("cloth: ", result["cloth"].shape)
-        
-        result["inpaint_mask"] =1-mask
-        # print("inpaint_mask: ", result["inpaint_mask"].shape)
-        
-        result["im_mask"] = im_mask
-        # print("im_mask: ", result["im_mask"].shape)
-        
-        result["caption_cloth"] = "a photo of " + cloth_annotation
-        # print("caption_cloth: ",result["caption_cloth"])
-        
+        result["image"] = image        
+        result["cloth_pure"] = self.transform(cloth)        
+        result["cloth"] = self.clip_processor(images=cloth, return_tensors="pt").pixel_values        
+        result["inpaint_mask"] =1-mask        
+        result["im_mask"] = im_mask        
+        result["caption_cloth"] = "a photo of " + cloth_annotation        
         result["caption"] = "model is wearing a " + cloth_annotation
-        # print("caption: ",result["caption"])
-        
+
         resize_transform = transforms.Resize((1024, 768))
         pose_img_resized = resize_transform(pose_img.unsqueeze(0)).squeeze(0)
         result["pose_img"] = pose_img_resized
-        # print("pose_img: ", result["pose_img"].shape)
-        
-        
-        
-        # print("-----------------------------------------------")
-        
-        # save_image(result["cloth"], "cloth", self.count)
-        # save_image(result["inpaint_mask"], "inpaint_mask", self.count)
-        # save_image(result["im_mask"], "im_mask", self.count)
-        # save_image(result["pose_img"], "pose_img", self.count)
-        # save_image(result["image"], "image", self.count)
-        # self.count+=1
         
         return result
 
@@ -402,30 +361,7 @@ def main():
         # Extract the images
         with torch.cuda.amp.autocast():
             with torch.no_grad():
-                # count = 0
                 for sample in test_dataloader: 
-#                     print("++++++++++++++++++++++++++++++++")
-#                     print("Keys: ", sample.keys())
-                    
-#                     print("c_name: ", sample['c_name'])
-#                     print("im_name: ", sample['im_name'])
-#                     print("image: ", sample["image"].shape)
-#                     print("cloth_pure: ", sample["cloth_pure"].shape)
-#                     print("cloth: ", sample["cloth"].shape)
-#                     print("inpaint_mask: ", sample["inpaint_mask"].shape)
-#                     print("im_mask: ", sample["caption_cloth"])
-#                     print("caption_cloth: ", sample["caption"])
-#                     print("caption: ", sample["caption"])
-#                     print("pose_img: ", sample["pose_img"].shape)
-                    
-#                     for i in range(args.test_batch_size):
-#                         save_image(sample["image"][i], "image", count)
-#                         save_image(sample["cloth_pure"][i], "cloth_pure", count)
-#                         save_image(sample["cloth"][i], "cloth", count)
-#                         save_image(sample["inpaint_mask"][i], "inpaint_mask", count)
-#                         save_image(sample["pose_img"][i], "pose_img", count)
-#                         count+=1
-#                     print("++++++++++++++++++++++++++++++++")
                     
                     img_emb_list = []
                     for i in range(sample['cloth'].shape[0]):
@@ -505,8 +441,6 @@ def main():
                     for i in range(len(images)):
                         x_sample = pil_to_tensor(images[i])
                         torchvision.utils.save_image(x_sample,os.path.join(args.output_dir,sample['im_name'][i]))
-                
-
 
 
 if __name__ == "__main__":
