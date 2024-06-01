@@ -197,21 +197,9 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                 generator = torch.Generator(model.device).manual_seed(args.seed) if args.seed is not None else None
                 
                 target_size = batch['image'].shape[2:]
-                # Resize pose_img and cloth_pure
                 batch['pose_img_resized'] = F.interpolate(batch['pose_img'], size=target_size, mode='bilinear', align_corners=False)
                 batch['cloth_pure_resized'] = F.interpolate(batch['cloth_pure'], size=target_size, mode='bilinear', align_corners=False)
 
-                
-#                 print("prompt_embeds shape: ", prompt_embeds.shape)
-#                 print("negative_prompt_embeds shape: ", negative_prompt_embeds.shape)
-#                 print("pooled_prompt_embeds shape: ", pooled_prompt_embeds.shape)
-#                 print("negative_pooled_prompt_embeds shape: ", negative_pooled_prompt_embeds.shape)
-                
-#                 print("batch['pose_img'] shape: ", batch['pose_img'].shape)
-#                 print("batch['cloth_pure'] shape: ", batch["cloth_pure"].shape)
-#                 print("batch['inpaint_mask'] shape: ", batch['inpaint_mask'].shape)
-#                 print("batch['image'] shape: ", batch['image'].shape)
-                
                 images = model(
                     prompt_embeds=prompt_embeds,
                     negative_prompt_embeds=negative_prompt_embeds,
@@ -228,31 +216,11 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                     height=args.height,
                     width=args.width,
                     guidance_scale=args.guidance_scale,
-                    ip_adapter_image=image_embeds.to(accelerator.device, dtype=weight_dtype)  # Ensure ip_adapter_image is cast to weight_dtype
+                    ip_adapter_image=image_embeds.to(accelerator.device, dtype=weight_dtype)
                 )[0]
 
-                # Ensure model output requires grad
                 images_tensor = torch.stack([transforms.ToTensor()(img).to(accelerator.device) for img in images]).requires_grad_()
-
-                # Ensure batch['image'] is also on the same device
                 batch_image_tensor = batch['image'].to(accelerator.device)
-                
-                # print("image tensor shape: ", images_tensor.shape)
-                # print("batch tensor shape: ", batch_image_tensor.shape)
-                
-                # Convert tensors to PIL images and save them as .jpg files
-                # to_pil = transforms.ToPILImage()
-
-                # def save_images(tensor, prefix):
-                #     tensor = tensor.detach().cpu() 
-                #     for i in range(tensor.size(0)):
-                #         img = to_pil(tensor[i])
-                #         img.save(f"{prefix}_image_{i}.jpg")
-
-                # Save images from images_tensor
-                # save_images(images_tensor, "output_images_tensor")
-                # save_images(batch_image_tensor, "output_batch_image_tensor")
-
                 loss = F.mse_loss(images_tensor, batch_image_tensor)
                 accelerator.backward(loss)
                 optimizer.step()
@@ -267,11 +235,33 @@ def train(args, train_dataloader, model, unet, image_encoder, optimizer, acceler
                         x_sample = transforms.ToTensor()(images[i])
                         torchvision.utils.save_image(x_sample, os.path.join(args.output_dir, f"step_{global_step}_{batch['im_name'][i]}"))
                         print("Images generated!")
-                        # Log images to wandb
-                    wandb.log({f"Generated Images step {global_step}": [wandb.Image(img) for img in images]})
+                    # Generate images from the same seed
+                    seed_generator = torch.Generator(model.device).manual_seed(42)  # Use a fixed seed
+                    same_seed_images = model(
+                        prompt_embeds=prompt_embeds,
+                        negative_prompt_embeds=negative_prompt_embeds,
+                        pooled_prompt_embeds=pooled_prompt_embeds,
+                        negative_pooled_prompt_embeds=negative_pooled_prompt_embeds,
+                        num_inference_steps=args.num_inference_steps,
+                        generator=seed_generator,
+                        strength=1.0,
+                        pose_img=batch['pose_img_resized'].to(accelerator.device, dtype=weight_dtype),
+                        text_embeds_cloth=prompt_embeds_c,
+                        cloth=batch["cloth_pure_resized"].to(accelerator.device, dtype=weight_dtype),
+                        mask_image=batch['inpaint_mask'].to(accelerator.device, dtype=weight_dtype),
+                        image=(batch['image'].to(accelerator.device, dtype=weight_dtype) + 1.0) / 2.0,
+                        height=args.height,
+                        width=args.width,
+                        guidance_scale=args.guidance_scale,
+                        ip_adapter_image=image_embeds.to(accelerator.device, dtype=weight_dtype)
+                    )[0]
 
+                    # Log generated images to wandb
+                    wandb.log({f"Generated Images step {global_step}": [wandb.Image(img) for img in images]})
+                    wandb.log({f"Generated Images with same seed step {global_step}": [wandb.Image(img) for img in same_seed_images]})
 
                 global_step += 1
+
 
                 
 def initialize_weights(model):
