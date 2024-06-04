@@ -24,6 +24,7 @@ import accelerate
 import numpy as np
 import torch
 from PIL import Image
+from torch.nn import CrossEntropyLoss, MSELoss
 import torch.nn.functional as F
 import transformers
 from accelerate import Accelerator
@@ -313,6 +314,23 @@ def main():
         num_workers=4,
     )
 
+    #Training Set
+    train_dataset = VitonHDTestDataset(
+        dataroot_path=args.data_dir,
+        phase="train",
+        order="unpaired" if args.unpaired else "paired",
+        size=(args.height, args.width),
+    )
+
+    train_dataloader = torch.utils.data.DataLoader(
+        train_dataset,
+        shuffle=True,
+        batch_size=args.train_batch_size,
+        num_workers=4,
+    )
+
+    
+
     pipe = TryonPipeline.from_pretrained(
             args.pretrained_model_name_or_path,
             unet=unet,
@@ -394,6 +412,18 @@ def main():
 
 
                         generator = torch.Generator(pipe.device).manual_seed(args.seed) if args.seed is not None else None
+
+                        # Define an optimizer for the generator
+                        optimizer_g = torch.optim.Adam(generator, lr=args.lr)
+
+                        # Define a loss function
+                        criterion = torch.nn.BCELoss()
+
+                        # Utilizing Discriminator with loss fxn
+
+
+                    
+
                         images = pipe(
                             prompt_embeds=prompt_embeds,
                             negative_prompt_embeds=negative_prompt_embeds,
