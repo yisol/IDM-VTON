@@ -319,6 +319,8 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
             post_act_fn=timestep_post_act,
             cond_proj_dim=time_cond_proj_dim,
         )
+        
+        
 
         if encoder_hid_dim_type is None and encoder_hid_dim is not None:
             encoder_hid_dim_type = "text_proj"
@@ -1047,7 +1049,10 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
         # `Timesteps` does not contain any weights and will always return f32 tensors
         # but time_embedding might actually be running in fp16. so we need to cast here.
         # there might be better ways to encapsulate this.
-        t_emb = t_emb.to(dtype=sample.dtype)
+        t_emb = t_emb.to("cuda", dtype=torch.float16)
+                
+        if timestep_cond is not None and timestep_cond.device != t_emb.device:
+            timestep_cond = timestep_cond.to(t_emb.device)
 
         emb = self.time_embedding(t_emb, timestep_cond)
         aug_emb = None

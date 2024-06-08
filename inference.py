@@ -1,16 +1,4 @@
-# coding=utf-8
-# Copyright 2023 The HuggingFace Inc. team. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union, Literal
 from ip_adapter.ip_adapter import Resampler
 
@@ -47,6 +35,32 @@ logger = get_logger(__name__, log_level="INFO")
 
 
 
+
+def save_image(tensor, name, count):
+        tensor = tensor.squeeze()  # Remove batch dimension if present
+
+        # Check if the tensor has 2 or 3 dimensions
+        if tensor.dim() == 2:
+            # Grayscale image
+            tensor = tensor.unsqueeze(0).repeat(3, 1, 1)  # Convert to 3-channel image by repeating the single channel
+        elif tensor.shape[0] == 1:  # Grayscale image with a single channel
+            tensor = tensor.repeat(3, 1, 1)  # Convert to 3-channel image
+
+        if tensor.dim() != 3 or tensor.shape[0] != 3:
+            raise ValueError("Tensor must have 3 dimensions and 3 channels after processing")
+
+        img = tensor.permute(1, 2, 0).cpu().numpy()  # Convert to HWC format
+        img = (img * 255).astype("uint8")  # Convert to 8-bit image
+        img = Image.fromarray(img)
+
+        # Create the output directory if it doesn't exist
+        output_dir = "./dataset/testing/"
+        os.makedirs(output_dir, exist_ok=True)
+
+        img.save(os.path.join(output_dir, f"{str(count)}_{name}.png"))
+
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
     parser.add_argument("--pretrained_model_name_or_path",type=str,default= "yisol/IDM-VTON",required=False,)
@@ -55,7 +69,7 @@ def parse_args():
     parser.add_argument("--num_inference_steps",type=int,default=30,)
     parser.add_argument("--output_dir",type=str,default="result",)
     parser.add_argument("--unpaired",action="store_true",)
-    parser.add_argument("--data_dir",type=str,default="/home/omnious/workspace/yisol/Dataset/zalando")
+    parser.add_argument("--data_dir",type=str,default="/notebooks/ayna/working_repo/IDM-VTON/dataset")
     parser.add_argument("--seed", type=int, default=42,)
     parser.add_argument("--test_batch_size", type=int, default=2,)
     parser.add_argument("--guidance_scale",type=float,default=2.0,)
@@ -86,6 +100,7 @@ class VitonHDTestDataset(data.Dataset):
         self.height = size[0]
         self.width = size[1]
         self.size = size
+        self.count = 0
         self.transform = transforms.Compose(
             [
                 transforms.ToTensor(),
@@ -95,7 +110,8 @@ class VitonHDTestDataset(data.Dataset):
         self.toTensor = transforms.ToTensor()
 
         with open(
-            os.path.join(dataroot_path, phase, "vitonhd_" + phase + "_tagged.json"), "r"
+            os.path.join(dataroot_path, phase, "deepfashion_" + phase + "_tagged.json"), "r"
+            # os.path.join(dataroot_path, phase, "vitonhd_" + phase + "_tagged.json"), "r"
         ) as file1:
             data1 = json.load(file1)
 
@@ -152,6 +168,7 @@ class VitonHDTestDataset(data.Dataset):
         self.c_names = c_names
         self.dataroot_names = dataroot_names
         self.clip_processor = CLIPImageProcessor()
+
     def __getitem__(self, index):
         c_name = self.c_names[index]
         im_name = self.im_names[index]
@@ -162,7 +179,8 @@ class VitonHDTestDataset(data.Dataset):
         cloth = Image.open(os.path.join(self.dataroot, self.phase, "cloth", c_name))
 
         im_pil_big = Image.open(
-            os.path.join(self.dataroot, self.phase, "image", im_name)
+            # os.path.join(self.dataroot, self.phase, "image", im_name)
+            os.path.join(self.dataroot, self.phase, "images", im_name)
         ).resize((self.width,self.height))
         image = self.transform(im_pil_big)
 
@@ -180,16 +198,20 @@ class VitonHDTestDataset(data.Dataset):
         result = {}
         result["c_name"] = c_name
         result["im_name"] = im_name
-        result["image"] = image
-        result["cloth_pure"] = self.transform(cloth)
-        result["cloth"] = self.clip_processor(images=cloth, return_tensors="pt").pixel_values
-        result["inpaint_mask"] =1-mask
-        result["im_mask"] = im_mask
-        result["caption_cloth"] = "a photo of " + cloth_annotation
+        result["image"] = image        
+        result["cloth_pure"] = self.transform(cloth)        
+        result["cloth"] = self.clip_processor(images=cloth, return_tensors="pt").pixel_values        
+        result["inpaint_mask"] =1-mask        
+        result["im_mask"] = im_mask        
+        result["caption_cloth"] = "a photo of " + cloth_annotation        
         result["caption"] = "model is wearing a " + cloth_annotation
-        result["pose_img"] = pose_img
 
+        resize_transform = transforms.Resize((1024, 768))
+        pose_img_resized = resize_transform(pose_img.unsqueeze(0)).squeeze(0)
+        result["pose_img"] = pose_img_resized
+        
         return result
+
 
     def __len__(self):
         # model images + cloth image
@@ -229,6 +251,7 @@ def main():
     #     args.mixed_precision = accelerator.mixed_precision
 
     # Load scheduler, tokenizer and models.
+    print("args.pretrained_model_name_or_path: ", args.pretrained_model_name_or_path)
     noise_scheduler = DDPMScheduler.from_pretrained(args.pretrained_model_name_or_path, subfolder="scheduler")
     vae = AutoencoderKL.from_pretrained(
         args.pretrained_model_name_or_path,
@@ -302,7 +325,7 @@ def main():
 
     test_dataset = VitonHDTestDataset(
         dataroot_path=args.data_dir,
-        phase="test",
+        phase="train",
         order="unpaired" if args.unpaired else "paired",
         size=(args.height, args.width),
     )
@@ -338,7 +361,8 @@ def main():
         # Extract the images
         with torch.cuda.amp.autocast():
             with torch.no_grad():
-                for sample in test_dataloader:
+                for sample in test_dataloader: 
+                    
                     img_emb_list = []
                     for i in range(sample['cloth'].shape[0]):
                         img_emb_list.append(sample['cloth'][i])
@@ -417,8 +441,6 @@ def main():
                     for i in range(len(images)):
                         x_sample = pil_to_tensor(images[i])
                         torchvision.utils.save_image(x_sample,os.path.join(args.output_dir,sample['im_name'][i]))
-                
-
 
 
 if __name__ == "__main__":
