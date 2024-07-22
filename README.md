@@ -45,14 +45,18 @@ conda activate idm
 ### VITON-HD
 You can download VITON-HD dataset from [VITON-HD](https://github.com/shadow2496/VITON-HD).
 
-After download VITON-HD dataset, move vitonhd_test_tagged.json into the test folder.
+After download VITON-HD dataset, move vitonhd_test_tagged.json into the test folder, and move vitonhd_train_tagged.json into the train folder.
 
 Structure of the Dataset directory should be as follows.
 
 ```
 
 train
-|-- ...
+|-- image
+|-- image-densepose
+|-- agnostic-mask
+|-- cloth
+|-- vitonhd_train_tagged.json
 
 test
 |-- image
@@ -95,34 +99,11 @@ DressCode
 ## Train
 
 
-
-
 ### Preparation
 
 Download pre-trained ip-adapter for sdxl(ip-adapter-plus_sdxl_vit-h.bin) and image encoder [here](https://github.com/tencent-ailab/IP-Adapter).
 
 Move ip-adapter to ckpt/ip_adapter, and image encoder to ckpt/image_encoder
-
-You can download VITON-HD dataset from [VITON-HD](https://github.com/shadow2496/VITON-HD).
-
-After download VITON-HD dataset, move vitonhd_train_tagged.json into the train folder.
-
-Structure of the Dataset directory should be as follows.
-
-
-```
-
-train
-|-- image
-|-- image-densepose
-|-- agnostic-mask
-|-- cloth
-|-- vitonhd_train_tagged.json
-
-test
-|-- ...
-
-```
 
 ```
 Start training using python file with arguments,
