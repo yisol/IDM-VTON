@@ -24,13 +24,17 @@ import accelerate
 import numpy as np
 import torch
 from PIL import Image
+from torch.nn import CrossEntropyLoss, MSELoss
 import torch.nn.functional as F
+import torch.nn as nn
 import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
 from packaging import version
 from torchvision import transforms
+from torchvision.models import inception_v3
+from scipy.stats import entropy
 import diffusers
 from diffusers import AutoencoderKL, DDPMScheduler, StableDiffusionPipeline, StableDiffusionXLControlNetInpaintPipeline
 from transformers import AutoTokenizer, PretrainedConfig,CLIPImageProcessor, CLIPVisionModelWithProjection,CLIPTextModelWithProjection, CLIPTextModel, CLIPTokenizer
@@ -70,6 +74,55 @@ def pil_to_tensor(images):
     images = np.array(images).astype(np.float32) / 255.0
     images = torch.from_numpy(images.transpose(2, 0, 1))
     return images
+
+#Using a pretrained inception model to evaluate the GAN with the inception score
+def inception_score(imgs, cuda=True, batch_size=32, resize=False, splits=1):
+    N = len(imgs)
+
+    assert batch_size > 0
+    assert N > batch_size
+
+    # Set up dtype
+    if cuda:
+        dtype = torch.cuda.FloatTensor
+    else:
+        if torch.cuda.is_available():
+            print("WARNING: You have a CUDA device, so you should probably set cuda=True")
+        dtype = torch.FloatTensor
+    # Set up dataloader
+    dataloader = torch.utils.data.DataLoader(imgs, batch_size=batch_size)
+
+    # Load inception model
+    inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
+    inception_model.eval();
+    up = nn.Upsample(size=(299, 299), mode='bilinear').type(dtype)
+    def get_pred(x):
+        if resize:
+            x = up(x)
+        x = inception_model(x)
+        return F.softmax(x).data.cpu().numpy()
+
+    # Get predictions
+    preds = np.zeros((N, 1000))
+
+    for i, batch in enumerate(dataloader, 0):
+        batch = batch.type(dtype)
+        batch_size_i = batch.size()[0]
+        preds[i*batch_size:i*batch_size + batch_size_i] = get_pred(batch)
+
+    # Now compute the mean kl-div
+    split_scores = []
+
+    for k in range(splits):
+        part = preds[k * (N // splits): (k+1) * (N // splits), :]
+        py = np.mean(part, axis=0)
+        scores = []
+        for i in range(part.shape[0]):
+            pyx = part[i, :]
+            scores.append(entropy(pyx, py))
+        split_scores.append(np.exp(np.mean(scores)))
+
+    return np.mean(split_scores), np.std(split_scores)
 
 
 class VitonHDTestDataset(data.Dataset):
@@ -196,7 +249,24 @@ class VitonHDTestDataset(data.Dataset):
         return len(self.im_names)
 
 
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        self.main = nn.Sequential(
+            # Input is the generator output
+            nn.Linear(generator_output_size, 256),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(256, 128),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(128, 64),
+            nn.LeakyReLU(0.2, inplace=True),
+            # Output is a single value: real or fake
+            nn.Linear(64, 1),
+            nn.Sigmoid()
+        )
 
+    def forward(self, input):
+        return self.main(input)
 
 def main():
     args = parse_args()
@@ -313,6 +383,23 @@ def main():
         num_workers=4,
     )
 
+    #Training Set
+    train_dataset = VitonHDTestDataset(
+        dataroot_path=args.data_dir,
+        phase="train",
+        order="unpaired" if args.unpaired else "paired",
+        size=(args.height, args.width),
+    )
+
+    train_dataloader = torch.utils.data.DataLoader(
+        train_dataset,
+        shuffle=True,
+        batch_size=32,
+        num_workers=4,
+    )
+
+    
+
     pipe = TryonPipeline.from_pretrained(
             args.pretrained_model_name_or_path,
             unet=unet,
@@ -394,6 +481,59 @@ def main():
 
 
                         generator = torch.Generator(pipe.device).manual_seed(args.seed) if args.seed is not None else None
+
+                        # Define an optimizer for the generator
+                        optimizer_g = torch.optim.Adam(generator, lr=args.lr)
+
+
+                        # Define a loss function
+                        criterion = torch.nn.BCELoss()
+
+                        # Creating Discriminator for further training the generator
+                        discriminator = Discriminator().to(pipe.device)
+                        optimizer_d = torch.optim.Adam(discriminator.parameters(), lr=args.lr)
+
+                        # Training loop
+                        for epoch in range(args.num_epochs):
+                            for i, data in enumerate(train_dataloader, 0):
+                                # 1. Train the discriminator
+                                discriminator.zero_grad()
+                                
+                                # 1a. Train the discriminator on real data
+                                real_data = data.to(pipe.device)
+                                real_output = discriminator(real_data)
+                                real_loss = criterion(real_output, torch.ones_like(real_output))
+                                real_loss.backward()
+
+                                # 1b. Train the discriminator on fake data
+                                noise = torch.randn(32, 100, 1, 1, device=pipe.device)
+                                if generator:
+                                    fake_data = generator(noise)
+                                    fake_output = discriminator(fake_data.detach())
+                                    fake_loss = criterion(fake_output, torch.zeros_like(fake_output))
+                                    fake_loss.backward()
+
+                                d_loss = real_loss + fake_loss
+                                optimizer_d.step()
+
+                                # 2. Train the generator
+                                if generator:
+                                    generator.zero_grad()
+
+                                # Generate fake data
+                                noise = torch.randn(32, 100, 1, 1, device=pipe.device)
+                                if generator:
+                                    fake_data = generator(noise)
+
+                                # Try to fool the discriminator
+                                output = discriminator(fake_data)
+                                g_loss = criterion(output, torch.ones_like(output))
+
+                                # Backward pass and optimization
+                                g_loss.backward()
+                                optimizer_g.step()
+                    
+
                         images = pipe(
                             prompt_embeds=prompt_embeds,
                             negative_prompt_embeds=negative_prompt_embeds,
@@ -412,6 +552,10 @@ def main():
                             guidance_scale=args.guidance_scale,
                             ip_adapter_image = image_embeds,
                         )[0]
+
+                    # Calculate the inception score
+                    mean, std = inception_score(fake_data)
+                    print('Inception score: mean = {}, std = {}'.format(mean, std))
 
 
                     for i in range(len(images)):
