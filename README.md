@@ -96,17 +96,22 @@ DressCode
 ```
 
 
-## Train
+## Training
 
 
 ### Preparation
 
-Download pre-trained ip-adapter for sdxl(ip-adapter-plus_sdxl_vit-h.bin) and image encoder [here](https://github.com/tencent-ailab/IP-Adapter).
+Download pre-trained ip-adapter for sdxl(IP-Adapter/sdxl_models/ip-adapter-plus_sdxl_vit-h.bin) and image encoder(IP-Adapter/models/image_encoder) [here](https://github.com/tencent-ailab/IP-Adapter).
+
+```
+git clone https://huggingface.co/h94/IP-Adapter
+```
 
 Move ip-adapter to ckpt/ip_adapter, and image encoder to ckpt/image_encoder
 
-```
 Start training using python file with arguments,
+
+```
 accelerate launch train_xl.py \
     --gradient_checkpointing --use_8bit_adam \
     --output_dir=result --train_batch_size=6 \
@@ -221,7 +226,7 @@ Thanks [Densepose](https://github.com/facebookresearch/DensePose) for human dens
 ## Citation
 ```
 @article{choi2024improving,
-  title={Improving Diffusion Models for Virtual Try-on},
+  title={Improving Diffusion Models for Authentic Virtual Try-on in the Wild},
   author={Choi, Yisol and Kwak, Sangkyung and Lee, Kyungmin and Choi, Hyungwon and Shin, Jinwoo},
   journal={arXiv preprint arXiv:2403.05139},
   year={2024}
