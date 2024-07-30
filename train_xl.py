@@ -465,7 +465,7 @@ def main():
         overrode_max_train_steps = True
 
 
-    unet,image_proj_model,unet_encoder,optimizer,train_dataloader,test_dataloader = accelerator.prepare(unet, image_proj_model,unet_encoder,optimizer, train_dataloader,test_dataloader)
+    unet,image_proj_model,unet_encoder,image_encoder,optimizer,train_dataloader,test_dataloader = accelerator.prepare(unet, image_proj_model,unet_encoder,image_encoder,optimizer,train_dataloader,test_dataloader)
     initial_global_step = 0
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
