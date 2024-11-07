@@ -21,14 +21,6 @@ Star ⭐ us if you like it!
 ![teaser](assets/teaser.png)&nbsp;
 
 
-## TODO LIST
-
-
-- [x] demo model
-- [x] inference code
-- [x] training code
-
-
 
 ## Requirements
 
@@ -107,7 +99,7 @@ Download pre-trained ip-adapter for sdxl(IP-Adapter/sdxl_models/ip-adapter-plus_
 git clone https://huggingface.co/h94/IP-Adapter
 ```
 
-Move ip-adapter to ckpt/ip_adapter, and image encoder to ckpt/image_encoder
+Move ip-adapter to ckpt/ip_adapter, and image encoder to ckpt/image_encoder.
 
 Start training using python file with arguments,
 
