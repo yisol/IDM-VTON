@@ -753,9 +753,7 @@ def main():
 
                 optimizer.step()
                 optimizer.zero_grad()
-                # Load scheduler, tokenizer and models.
-                progress_bar.update(1)
-                global_step += 1
+
             if accelerator.sync_gradients:
                 progress_bar.update(1)
                 global_step += 1
