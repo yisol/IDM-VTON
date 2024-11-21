@@ -767,7 +767,7 @@ def main():
             if global_step >= args.max_train_steps:
                 break
 
-        if global_step % args.checkpointing_epoch == 0:
+        if epoch % args.checkpointing_epoch == 0:
             if accelerator.is_main_process:
                 # _before_ saving state, check if this save would set us over the `checkpoints_total_limit`
                 unwrapped_unet = accelerator.unwrap_model(
