@@ -229,6 +229,28 @@ Thanks [Densepose](https://github.com/facebookresearch/DensePose) for human dens
 [![Star History Chart](https://api.star-history.com/svg?repos=yisol/IDM-VTON&type=Date)](https://star-history.com/#yisol/IDM-VTON&Date)
 
 
+## ❗ Common Runtime Errors
+
+### SIGKILL (Out of Memory)
+Cause:
+- GPU VRAM exhaustion (frequent on Colab T4 / P100)
+
+Mitigation:
+- Reduce resolution (e.g., 384×512)
+- Use batch size = 1
+- Prefer high-VRAM GPUs (A100 / RTX 3090+)
+
+---
+
+### UNet2DConditionModel key mismatch
+Cause:
+- Incompatible checkpoints or diffusers version
+
+Mitigation:
+- Follow environment.yaml strictly
+- Ensure correct pretrained checkpoints are used
+
+
 
 ## Citation
 ```
