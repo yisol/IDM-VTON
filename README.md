@@ -116,6 +116,20 @@ or, you can simply run with the script file.
 sh train_xl.sh
 ```
 
+## ⚠️ Google Colab / Low-VRAM Warning
+
+IDM-VTON inference is **not suitable for free Google Colab GPUs** (T4 / P100).
+
+Users may encounter:
+- `SIGKILL (out of memory)`
+- Silent kernel crashes
+- Inference failure even at low resolutions
+
+**Recommended minimum GPU**:
+- ≥ 24GB VRAM (RTX 3090 / A5000 / A100)
+
+This behavior is expected and not a bug.
+
 
 ## Inference
 
@@ -140,6 +154,7 @@ or, you can simply run with the script file.
 ```
 sh inference.sh
 ```
+
 
 ### DressCode
 
@@ -212,6 +227,28 @@ Thanks [Densepose](https://github.com/facebookresearch/DensePose) for human dens
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=yisol/IDM-VTON&type=Date)](https://star-history.com/#yisol/IDM-VTON&Date)
+
+
+## ❗ Common Runtime Errors
+
+### SIGKILL (Out of Memory)
+Cause:
+- GPU VRAM exhaustion (frequent on Colab T4 / P100)
+
+Mitigation:
+- Reduce resolution (e.g., 384×512)
+- Use batch size = 1
+- Prefer high-VRAM GPUs (A100 / RTX 3090+)
+
+---
+
+### UNet2DConditionModel key mismatch
+Cause:
+- Incompatible checkpoints or diffusers version
+
+Mitigation:
+- Follow environment.yaml strictly
+- Ensure correct pretrained checkpoints are used
 
 
 
