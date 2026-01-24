@@ -116,6 +116,20 @@ or, you can simply run with the script file.
 sh train_xl.sh
 ```
 
+## ⚠️ Google Colab / Low-VRAM Warning
+
+IDM-VTON inference is **not suitable for free Google Colab GPUs** (T4 / P100).
+
+Users may encounter:
+- `SIGKILL (out of memory)`
+- Silent kernel crashes
+- Inference failure even at low resolutions
+
+**Recommended minimum GPU**:
+- ≥ 24GB VRAM (RTX 3090 / A5000 / A100)
+
+This behavior is expected and not a bug.
+
 
 ## Inference
 
@@ -140,6 +154,7 @@ or, you can simply run with the script file.
 ```
 sh inference.sh
 ```
+
 
 ### DressCode
 
