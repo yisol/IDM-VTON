@@ -1,3 +1,14 @@
+---
+title: IDM-VTON
+emoji: 👕
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: "5.29.0"
+python_version: "3.10"
+app_file: gradio_demo/app.py
+pinned: false
+---
 
 <div align="center">
 <h1>IDM-VTON: Improving Diffusion Models for Authentic Virtual Try-on in the Wild</h1>
